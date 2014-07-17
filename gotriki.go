@@ -5,17 +5,16 @@ package main
 
 import (
 	"bitbucket.org/kornel661/triki/gotriki/conf"
+	"bitbucket.org/kornel661/triki/gotriki/log"
 	"github.com/gorilla/mux"
 	"io"
-	"log"
-	"net"
 	"net/http"
 )
 
 func homeView(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	headers.Add("Content-Type", "text/html")
-	log.Printf("Dealing with a request...\n")
+	log.Infof("Dealing with a request...\n")
 	rest := mux.Vars(r)["rest"]
 	io.WriteString(w, "<html><head></head><body><p>It works!<br>rest: "+rest+"</p></body></html>")
 }
@@ -27,12 +26,12 @@ func main() {
 	r.HandleFunc("/fcgi-test", homeView)
 	r.HandleFunc("/fcgi-test/{rest:.*}", homeView)
 
-	var err error
+	// serve static content
+	r.PathPrefix("/static").Handler(http.FileServer(http.Dir(conf.Server.Root)))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(conf.Server.Root + "/static")))
 
-	log.Printf("Serving via www: %s.\n", conf.Server.Addr)
-	err = http.ListenAndServe(conf.Server.Addr, r)
-
-	if err != nil {
+	log.Infof("Serving via www: http://%s.\n", conf.Server.Addr)
+	if err := http.ListenAndServe(conf.Server.Addr, r); err != nil {
 		log.Fatal(err)
 	}
 }

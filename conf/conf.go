@@ -12,11 +12,13 @@ import (
 
 // flag variables
 var (
-	flagHTTP = flag.String("addr", "localhost:8765", "address and port for gotriki server, eg., localhost:8765")
+	flagHTTP     = flag.String("addr", "localhost:8765", "address and port for gotriki server")
+	flagServRoot = flag.String("root", "./www", "directory with static files to serve")
 )
 
 type ServerOpts struct {
-	Addr String
+	Addr string
+	Root string
 }
 
 // parsed flags
@@ -29,5 +31,6 @@ var (
 func Setup() {
 	flag.Parse()
 	Server.Addr = *flagHTTP
+	Server.Root = *flagServRoot
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
