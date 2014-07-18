@@ -56,7 +56,11 @@ func Setup() {
 	MDBDialInfo.Password = *flagMongoPass
 	if *flagMongoSSL {
 		MDBDialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-			return tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: *flagMongoSSLInsecure})
+			conn, err := tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: *flagMongoSSLInsecure})
+			if err != nil {
+				log.Printf("MongoDB TLS connection error: %s.\n", err)
+			}
+			return conn, err
 		}
 	}
 

@@ -18,7 +18,7 @@ func Setup() {
 	//session, err := mgo.DialWithTimeout(conf.MongoDB.Addr, conf.MongoDB.DialTimeout)
 	session, err := mgo.DialWithInfo(&conf.MDBDialInfo)
 	if err != nil {
-		log.Fatalf("Error connecting to MongoDB: %s\n", err)
+		log.Fatalf("Error connecting to MongoDB: %s.\n", err)
 	}
 	adminSession = session.Clone()
 	session.SetMode(mgo.Monotonic, true)
