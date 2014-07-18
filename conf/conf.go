@@ -6,9 +6,13 @@ It is resposible for loading configuration file and parsing command line flags.
 package conf
 
 import (
+	"crypto/tls"
 	"flag"
+	"labix.org/v2/mgo"
 	"log"
+	"net"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -16,8 +20,14 @@ import (
 var (
 	flagHTTP             = flag.String("addr", "localhost:8765", "address and port for gotriki server")
 	flagServRoot         = flag.String("root", "./www", "directory with static files to serve")
-	flagMongoAddr        = flag.String("mongo", "triki:triki@localhost:27017/triki", "MongoDB server to connect to, format: [user:pass@]host1[:port1][,host2[:port2],...][/database][?options]")
-	flagMongoDialTimeout = flag.Int("mongoDialTimeout", 10, "timeout for connecting to MongoDB instance (in seconds, >=0)")
+	flagMongoAddr        = flag.String("mongoAddr", "localhost:27017", "MongoDB server to connect to, format: host1[:port1][,host2[:port2],...]")
+	flagMongoDirect      = flag.Bool("mongoDirect", false, "direct connection with MongoDB?")
+	flagMongoDialTimeout = flag.Int("mongoDialTimeout", 5, "timeout for connecting to MongoDB instance (in seconds, >=0)")
+	flagMongoDatabase    = flag.String("mongoDatabase", "triki", "MongoDB database with triki data")
+	flagMongoUsr         = flag.String("mongoUsr", "triki", "username for authentication to MongoDB")
+	flagMongoPass        = flag.String("mongoPass", "triki", "password for authentication to MongoDB")
+	flagMongoSSL         = flag.Bool("mongoSSL", true, "use SSL for connections with MongoDB server")
+	flagMongoSSLInsecure = flag.Bool("mongoSSLInsecure", false, "don't verify MongoDB server's certificates, suspectible to man-in-the-middle attack, insecure!")
 )
 
 // ServerOpts stores main gotriki server options
@@ -26,30 +36,34 @@ type ServerOpts struct {
 	Root string
 }
 
-// MongoOpts stores options of connection to the MongoDB
-type MongoOpts struct {
-	Addr        string
-	DialTimeout time.Duration
-}
-
 // parsed flags
 var (
 	// Server stores main gotriki server options
 	Server ServerOpts
 	// MongoDB server options
-	MongoDB MongoOpts
+	MDBDialInfo mgo.DialInfo
 )
 
 // Setup parses command line flags and config files.
 func Setup() {
 	flag.Parse()
 
+	MDBDialInfo.Addrs = strings.Split(*flagMongoAddr, ",")
+	MDBDialInfo.Direct = *flagMongoDirect
+	MDBDialInfo.Timeout = time.Duration(*flagMongoDialTimeout) * time.Second
+	MDBDialInfo.Database = *flagMongoDatabase
+	MDBDialInfo.Username = *flagMongoUsr
+	MDBDialInfo.Password = *flagMongoPass
+	if *flagMongoSSL {
+		MDBDialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+			return tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: *flagMongoSSLInsecure})
+		}
+	}
+
 	Server.Addr = *flagHTTP
 	Server.Root = *flagServRoot
 
-	MongoDB.Addr = *flagMongoAddr
-	MongoDB.DialTimeout = time.Duration(*flagMongoDialTimeout) * time.Second
-	if MongoDB.DialTimeout < 0 {
+	if MDBDialInfo.Timeout < 0 {
 		log.Fatalln("MongoDB dial timeout must be nonnegative.")
 	}
 

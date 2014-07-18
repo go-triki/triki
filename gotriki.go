@@ -8,6 +8,7 @@ import (
 	"bitbucket.org/kornel661/triki/gotriki/db"
 	"bitbucket.org/kornel661/triki/gotriki/log"
 	"github.com/gorilla/mux"
+	//"github.com/kornel661/manners"
 	"io"
 	"net/http"
 )
