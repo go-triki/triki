@@ -1,5 +1,5 @@
 /*
-	gotriki logging package
+Package log is a gotriki logging package.
 */
 package log
 
