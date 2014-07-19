@@ -7,10 +7,13 @@ import (
 	"bitbucket.org/kornel661/triki/gotriki/conf"
 	"bitbucket.org/kornel661/triki/gotriki/db"
 	"bitbucket.org/kornel661/triki/gotriki/log"
+	"fmt"
 	"github.com/gorilla/mux"
-	//"github.com/kornel661/manners"
+	"github.com/kornel661/manners"
 	"io"
 	"net/http"
+	"os"
+	"os/signal"
 )
 
 func homeView(w http.ResponseWriter, r *http.Request) {
@@ -26,8 +29,26 @@ const (
 )
 
 func main() {
+	// panic trap
+	defer func() {
+		if r := recover(); r != nil {
+			log.Infof("Panic: %s.\n", r)
+		}
+	}()
 	conf.Setup()
+
+	// catch signals & shutdown the server
+	server := manners.NewServer()
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, os.Kill)
+	go func() {
+		<-signals
+		fmt.Println()
+		server.Shutdown <- true
+	}()
+
 	db.Setup()
+	defer db.Cleanup()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/fcgi-test", homeView)
@@ -38,7 +59,9 @@ func main() {
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(conf.Server.Root + staticPrefix)))
 
 	log.Infof("Serving via www: http://%s\n", conf.Server.Addr)
-	if err := http.ListenAndServe(conf.Server.Addr, r); err != nil {
+	//server := manners.NewServer()
+	if err := server.ListenAndServe(conf.Server.Addr, r); err != nil {
 		log.Fatal(err)
 	}
+	log.Infoln("Exiting gracefully...")
 }
