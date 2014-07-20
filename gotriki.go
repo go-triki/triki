@@ -7,7 +7,6 @@ import (
 	"bitbucket.org/kornel661/triki/gotriki/conf"
 	"bitbucket.org/kornel661/triki/gotriki/db"
 	"bitbucket.org/kornel661/triki/gotriki/log"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/kornel661/manners"
 	"io"
@@ -32,7 +31,9 @@ func main() {
 	// panic trap
 	defer func() {
 		if r := recover(); r != nil {
-			log.Infof("Panic: %s.\n", r)
+			if fatal, ok := r.(log.FatalErrorPanic); ok {
+				log.Infof("Panic: %s.\n", fatal)
+			}
 		}
 	}()
 	conf.Setup()
@@ -41,12 +42,14 @@ func main() {
 	server := manners.NewServer()
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
+	// "reroute" signals channel to server.Shutdown
 	go func() {
 		<-signals
-		fmt.Println()
+		log.Infoln("Cought signal. Exiting.")
 		server.Shutdown <- true
 	}()
 
+	// setup database connections, etc.
 	db.Setup()
 	defer db.Cleanup()
 
@@ -59,7 +62,6 @@ func main() {
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(conf.Server.Root + staticPrefix)))
 
 	log.Infof("Serving via www: http://%s\n", conf.Server.Addr)
-	//server := manners.NewServer()
 	if err := server.ListenAndServe(conf.Server.Addr, r); err != nil {
 		log.Fatal(err)
 	}

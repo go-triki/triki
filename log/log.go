@@ -8,8 +8,15 @@ import (
 	"log"
 )
 
+// Type that is "paniced" in fatal log functions
+type FatalErrorPanic string
+
+func (fatal FatalErrorPanic) Error() string {
+	return string(fatal)
+}
+
 const (
-	fatalErr = "Fatal server error"
+	fatalErr FatalErrorPanic = "Fatal server error"
 )
 
 func Infof(format string, args ...interface{}) {
