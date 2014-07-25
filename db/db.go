@@ -5,7 +5,7 @@ package db
 
 import (
 	"bitbucket.org/kornel661/triki/gotriki/conf"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 	"log"
 )
 

@@ -1,5 +1,5 @@
 /*
-gotriki server
+gotriki server of the trikipedia - the truth encyclopedia
 */
 package main
 
@@ -28,11 +28,13 @@ const (
 )
 
 func main() {
-	// panic trap
+	// panic trap (for fatal errors from log)
 	defer func() {
 		if r := recover(); r != nil {
 			if fatal, ok := r.(log.FatalErrorPanic); ok {
 				log.Infof("Panic: %s.\n", fatal)
+			} else {
+				panic(r)
 			}
 		}
 	}()
@@ -57,7 +59,7 @@ func main() {
 	r.HandleFunc("/fcgi-test", homeView)
 	r.HandleFunc("/fcgi-test/{rest:.*}", homeView)
 
-	// serve static content
+	// serve static content from staticPrefix and "/"
 	r.PathPrefix(staticPrefix).Handler(http.FileServer(http.Dir(conf.Server.Root)))
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(conf.Server.Root + staticPrefix)))
 
