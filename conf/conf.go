@@ -30,7 +30,7 @@ var (
 	flagMongoSSLInsecure = flag.Bool("mongoSSLInsecure", false, "don't verify MongoDB server's certificates, suspectible to man-in-the-middle attack, insecure!")
 )
 
-// ServerOpts stores main gotriki server options
+// ServerOpts stores main gotriki server options.
 type ServerOpts struct {
 	Addr string
 	Root string
@@ -38,9 +38,9 @@ type ServerOpts struct {
 
 // parsed flags
 var (
-	// Server stores main gotriki server options
+	// Server stores main gotriki server options.
 	Server ServerOpts
-	// MDBDialInfo holds MongoDB server connection options
+	// MDBDialInfo holds MongoDB server connection options.
 	MDBDialInfo mgo.DialInfo
 )
 

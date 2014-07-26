@@ -51,13 +51,17 @@ func UserFindByLogin(login string) (User, error) {
 }
 
 // UserVerify checks if the given credentials can be authenticated.
-func UserVerify(login, pass string) (bool, error) {
+func UserAuthenticate(login, pass string) (*User, error) {
 	usr, err := UserFindByLogin(login)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	err = bcrypt.CompareHashAndPassword(usr.PassHash, []byte(pass))
-	return err == nil, err
+	if err != nil {
+		return nil, err
+	} else {
+		return &usr, err
+	}
 }
 
 // userCheck carries out some sanity checks on the given user.

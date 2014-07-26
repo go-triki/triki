@@ -15,6 +15,10 @@ func (fatal FatalErrorPanic) Error() string {
 	return string(fatal)
 }
 
+func (fatal FatalErrorPanic) FatalErrorPanicType() {
+	return
+}
+
 const (
 	fatalErr FatalErrorPanic = "Fatal server error"
 )

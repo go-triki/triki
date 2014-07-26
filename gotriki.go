@@ -1,5 +1,5 @@
 /*
-gotriki server of the trikipedia - the truth encyclopedia
+Gotriki server of the Trikipedia - the truth encyclopedia.
 */
 package main
 
@@ -9,22 +9,14 @@ import (
 	"bitbucket.org/kornel661/triki/gotriki/log"
 	"github.com/gorilla/mux"
 	"github.com/kornel661/manners"
-	"io"
 	"net/http"
 	"os"
 	"os/signal"
 )
 
-func homeView(w http.ResponseWriter, r *http.Request) {
-	headers := w.Header()
-	headers.Add("Content-Type", "text/html")
-	log.Infof("Dealing with a request...\n")
-	rest := mux.Vars(r)["rest"]
-	io.WriteString(w, "<html><head></head><body><p>It works!<br>rest: "+rest+"</p></body></html>")
-}
-
 const (
 	staticPrefix = "/static"
+	apiPrefix    = "/api/"
 )
 
 func main() {
@@ -47,7 +39,7 @@ func main() {
 	// "reroute" signals channel to server.Shutdown
 	go func() {
 		<-signals
-		log.Infoln("Cought signal. Exiting.")
+		log.Infoln("Cought signal. Exiting (waiting for open connections).")
 		server.Shutdown <- true
 	}()
 
@@ -56,14 +48,14 @@ func main() {
 	defer db.Cleanup()
 
 	r := mux.NewRouter()
-	r.HandleFunc("/fcgi-test", homeView)
-	r.HandleFunc("/fcgi-test/{rest:.*}", homeView)
+	apiRouter := r.PathPrefix(apiPrefix).Subrouter()
+	routeAPI(apiRouter)
 
 	// serve static content from staticPrefix and "/"
 	r.PathPrefix(staticPrefix).Handler(http.FileServer(http.Dir(conf.Server.Root)))
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(conf.Server.Root + staticPrefix)))
 
-	log.Infof("Serving via www: http://%s\n", conf.Server.Addr)
+	log.Infof("Serving gotriki via www: http://%s\n", conf.Server.Addr)
 	if err := server.ListenAndServe(conf.Server.Addr, r); err != nil {
 		log.Fatal(err)
 	}
