@@ -47,6 +47,7 @@ func main() {
 	db.Setup()
 	defer db.Cleanup()
 
+	// setup routing
 	r := mux.NewRouter()
 	apiRouter := r.PathPrefix(apiPrefix).Subrouter()
 	routeAPI(apiRouter)
@@ -55,6 +56,7 @@ func main() {
 	r.PathPrefix(staticPrefix).Handler(http.FileServer(http.Dir(conf.Server.Root)))
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(conf.Server.Root + staticPrefix)))
 
+	// start server
 	log.Infof("Serving gotriki via www: http://%s\n", conf.Server.Addr)
 	if err := server.ListenAndServe(conf.Server.Addr, r); err != nil {
 		log.Fatal(err)

@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	// minimal password length
 	usersMinPassLen = 4
 )
 
@@ -27,6 +28,7 @@ type User struct {
 	Name     string        `json:"name"           bson:"name"`
 }
 
+// usersSetup ensures that the users collection is setup correctly.
 func usersSetup() {
 	c := usersC()
 	index := mgo.Index{
@@ -42,7 +44,7 @@ func usersSetup() {
 	}
 }
 
-// UserFindByLogin finds user with a given login
+// UserFindByLogin finds user with a given login.
 func UserFindByLogin(login string) (User, error) {
 	var user User
 	c := usersC()
@@ -70,7 +72,7 @@ func userCheck(usr *User) error {
 	if len(usr.Password) < usersMinPassLen {
 		return errors.New("Password too short.")
 	}
-	// does login look like email
+	// does login look like an email?
 	at := strings.Index(usr.Login, "@")
 	if at < 1 || at == len(usr.Login)-1 {
 		return errors.New("Login needs to be an email address.")
@@ -80,8 +82,8 @@ func userCheck(usr *User) error {
 }
 
 // UserNew adds new user to the database. Returns nil on success.
-// User.Password is hashed into User.PassHash
-// ID is generated
+// User.Password is hashed into User.PassHash.
+// ID is generated.
 func UserNew(usr *User) error {
 	err := userCheck(usr)
 	if err != nil {

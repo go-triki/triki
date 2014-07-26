@@ -8,9 +8,14 @@ import (
 	"net/http"
 )
 
+const (
+	contentType         = "Content-Type"
+	applicationJSONType = "application/json"
+)
+
 // writeJSON writes JSON representation of v to the http response w.
 func writeJSON(w http.ResponseWriter, v interface{}) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentType, applicationJSONType)
 	enc := json.NewEncoder(w)
 	enc.Encode(v)
 }

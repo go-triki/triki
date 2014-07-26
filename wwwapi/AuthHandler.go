@@ -7,8 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 	//"github.com/gorilla/mux"
+	"math/rand"
 	"net/http"
+	"time"
 )
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+}
 
 type (
 	authInJSON struct {
@@ -26,8 +32,11 @@ type (
 	}
 )
 
-// AuthPostHandler handles user authentication in /api/auth
+// AuthPostHandler handles user authentication in /api/auth.
 func AuthPostHandler(w http.ResponseWriter, r *http.Request) {
+	// simple guard, FIXME
+	time.Sleep(time.Duration(100+rand.Intn(100)) * time.Millisecond)
+
 	// log info
 	var info bytes.Buffer
 	defer func() { log.Infoln(info.String()) }()
@@ -45,15 +54,15 @@ func AuthPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate user
-	if usr, err := db.UserAuthenticate(authIn.Session.Login, authIn.Session.Password); err != nil {
+	usr, err := db.UserAuthenticate(authIn.Session.Login, authIn.Session.Password)
+	if err != nil {
 		// not authenticated
-		http.Error(w, "User authentication failed: "+err.Error(), http.StatusForbidden)
-		fmt.Fprintf(&info, " Authentication failed for `%s`: %s.", usr.Login, err)
-		return
-	} else {
-		// authentication successful
-		writeJSON(w, authOutJSON{authOutSessionJSON{"token", usr.Login}})
-		fmt.Fprintf(&info, " User `%s` authenticated.", usr.Login)
+		http.Error(w, "Authentication failed for user `"+authIn.Session.Login+"`.", http.StatusForbidden)
+		fmt.Fprintf(&info, " Authentication failed for `%s`: %s.", authIn.Session.Login, err)
 		return
 	}
+
+	// authentication successful
+	writeJSON(w, authOutJSON{authOutSessionJSON{"token", usr.Login}})
+	fmt.Fprintf(&info, " User `%s` authenticated.", usr.Login)
 }

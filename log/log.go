@@ -11,10 +11,12 @@ import (
 // Type that is "paniced" in fatal log functions
 type FatalErrorPanic string
 
+// Error returns error description.
 func (fatal FatalErrorPanic) Error() string {
 	return string(fatal)
 }
 
+// FatalErrorPanicType method mahes this type unique.
 func (fatal FatalErrorPanic) FatalErrorPanicType() {
 	return
 }

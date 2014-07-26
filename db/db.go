@@ -20,7 +20,6 @@ var (
 
 // Setup database connections, etc.
 func Setup() {
-	//session, err := mgo.DialWithTimeout(conf.MongoDB.Addr, conf.MongoDB.DialTimeout)
 	var err error
 	session, err = mgo.DialWithInfo(&conf.MDBDialInfo)
 	if err != nil {
