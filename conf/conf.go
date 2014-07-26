@@ -40,7 +40,7 @@ type ServerOpts struct {
 var (
 	// Server stores main gotriki server options
 	Server ServerOpts
-	// MongoDB server options
+	// MDBDialInfo holds MongoDB server connection options
 	MDBDialInfo mgo.DialInfo
 )
 

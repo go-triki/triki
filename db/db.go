@@ -1,5 +1,5 @@
 /*
-Package db wrapps MongoDB database for triki.
+Package db wraps MongoDB database for triki.
 */
 package db
 
@@ -7,6 +7,11 @@ import (
 	"bitbucket.org/kornel661/triki/gotriki/conf"
 	"gopkg.in/mgo.v2"
 	"log"
+)
+
+// MongoDB collections' names
+const (
+	usersCName = "users"
 )
 
 var (
@@ -21,9 +26,13 @@ func Setup() {
 	if err != nil {
 		log.Fatalf("Error connecting to MongoDB: %s.\n", err)
 	}
+	session.SetSafe(&mgo.Safe{})
 	session.SetMode(mgo.Monotonic, true)
 	adminSession = session.Copy()
+	adminSession.SetSafe(&mgo.Safe{WMode: "majority", FSync: true})
 	adminSession.SetMode(mgo.Strong, true)
+
+	usersSetup()
 }
 
 // Cleanup database connections, etc.
