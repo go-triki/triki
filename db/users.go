@@ -52,7 +52,7 @@ func UserFindByLogin(login string) (User, error) {
 	return user, err
 }
 
-// UserVerify checks if the given credentials can be authenticated.
+// UserAuthenticate checks if the given credentials can be authenticated.
 func UserAuthenticate(login, pass string) (*User, error) {
 	usr, err := UserFindByLogin(login)
 	if err != nil {
@@ -61,21 +61,23 @@ func UserAuthenticate(login, pass string) (*User, error) {
 	err = bcrypt.CompareHashAndPassword(usr.PassHash, []byte(pass))
 	if err != nil {
 		return nil, err
-	} else {
-		return &usr, err
 	}
+	return &usr, err
 }
 
-// userCheck carries out some sanity checks on the given user.
+// userCheck carries out some sanity checks on the given user (pass length, is login an email address).
 func userCheck(usr *User) error {
 	// password length
 	if len(usr.Password) < usersMinPassLen {
-		return errors.New("Password too short.")
+		return errors.New("Password too short")
 	}
 	// does login look like an email?
 	at := strings.Index(usr.Login, "@")
 	if at < 1 || at == len(usr.Login)-1 {
-		return errors.New("Login needs to be an email address.")
+		return errors.New("Login needs to be an email address")
+	}
+	if len(usr.Name) < 1 {
+		return errors.New("Name cannot be empty")
 	}
 	// checks passed
 	return nil
@@ -84,7 +86,10 @@ func userCheck(usr *User) error {
 // UserNew adds new user to the database. Returns nil on success.
 // User.Password is hashed into User.PassHash.
 // ID is generated.
-func UserNew(usr *User) error {
+func userNew(usr *User) error {
+	if usr.Name == "" {
+		usr.Name = usr.Login
+	}
 	err := userCheck(usr)
 	if err != nil {
 		return err
@@ -96,5 +101,20 @@ func UserNew(usr *User) error {
 	}
 	c := usersC()
 	err = c.Insert(&usr)
+	return err
+}
+
+// UserSignup signs given user up, pending email verification.
+// FIXME: write email verification
+func UserSignup(login, pass string) error {
+	_, err := UserFindByLogin(login)
+	if err == nil { // FIXME: is this check enough?
+		return errors.New("User already exists.")
+	}
+	usr := User{
+		Login:    login,
+		Password: pass,
+	}
+	err = userNew(&usr)
 	return err
 }

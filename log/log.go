@@ -25,6 +25,14 @@ const (
 	fatalErr FatalErrorPanic = "Fatal server error"
 )
 
+func Warningf(format string, args ...interface{}) {
+	log.Printf(format, args...)
+}
+
+func Warningln(msg string) {
+	Warningf("%s\n", msg)
+}
+
 func Infof(format string, args ...interface{}) {
 	//glog.Infof(format, args...)
 	log.Printf(format, args...)

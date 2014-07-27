@@ -11,4 +11,5 @@ const (
 
 func routeAPI(r *mux.Router) {
 	r.HandleFunc(authPath, wwwapi.AuthPostHandler).Methods("POST")
+	r.HandleFunc(authPath+"/signup", wwwapi.AuthSignupPostHandler).Methods("POST")
 }
