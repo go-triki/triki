@@ -21,7 +21,7 @@ func usersC() *mgo.Collection {
 
 // User type stores user information (e.g. for authentication), also for MongoDB and JSON.
 type User struct {
-	ID       bson.ObjectId `json:"-"              bson:"_id"`
+	ID       bson.ObjectId `json:"account_id"     bson:"_id"`
 	Login    string        `json:"login"          bson:"login"`
 	Password string        `json:"pass,omitempty" bson:"-"`
 	PassHash []byte        `json:"-"              bson:"pass"`
@@ -40,29 +40,40 @@ func usersSetup() {
 	}
 	err := c.EnsureIndex(index)
 	if err != nil {
-		log.Fatalf("MongoDB ensureIndex login on users failed: %s.", err)
+		log.Fatalf("MongoDB ensureIndex login on users failed: %s.\n", err)
 	}
 }
 
 // UserFindByLogin finds user with a given login.
 func UserFindByLogin(login string) (User, error) {
 	var user User
-	c := usersC()
-	err := c.Find(bson.M{"login": login}).One(&user)
+	err := usersC().Find(bson.M{"login": login}).One(&user)
+	return user, err
+}
+
+// UserFindByID finds user with a given login.
+func UserFindByID(id bson.ObjectId) (User, error) {
+	var user User
+	err := usersC().Find(bson.M{"_id": id}).One(&user)
 	return user, err
 }
 
 // UserAuthenticate checks if the given credentials can be authenticated.
-func UserAuthenticate(login, pass string) (*User, error) {
+// Returns (user, token, error).
+func UserAuthenticate(login, pass string) (*User, string, error) {
 	usr, err := UserFindByLogin(login)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	err = bcrypt.CompareHashAndPassword(usr.PassHash, []byte(pass))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return &usr, err
+	token, err := tokenNew(usr.ID)
+	if err != nil {
+		return nil, "", err
+	}
+	return &usr, token, err
 }
 
 // userCheck carries out some sanity checks on the given user (pass length, is login an email address).
@@ -99,8 +110,7 @@ func userNew(usr *User) error {
 	if err != nil {
 		return err
 	}
-	c := usersC()
-	err = c.Insert(&usr)
+	err = usersC().Insert(usr)
 	return err
 }
 

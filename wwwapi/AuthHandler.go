@@ -57,7 +57,7 @@ func AuthPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate user
-	usr, err := db.UserAuthenticate(authIn.Session.Login, authIn.Session.Password)
+	usr, token, err := db.UserAuthenticate(authIn.Session.Login, authIn.Session.Password)
 	if err != nil {
 		// not authenticated
 		http.Error(w, "Authentication failed for user `"+authIn.Session.Login+"`.", http.StatusForbidden)
@@ -66,11 +66,7 @@ func AuthPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authentication successful
-	err = writeJSON(w, authOutJSON{authOutSessionJSON{"token", usr.Login}})
-	if err != nil {
-		fmt.Fprintf(&info, "Error writing reply: %s.", err)
-		log.Warningln(info.String())
-	}
+	writeJSON(w, &info, authOutJSON{authOutSessionJSON{token, usr.ID.Hex()}})
 	fmt.Fprintf(&info, " User `%s` authenticated.", usr.Login)
 }
 

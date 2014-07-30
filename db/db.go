@@ -32,6 +32,7 @@ func Setup() {
 	adminSession.SetMode(mgo.Strong, true)
 
 	usersSetup()
+	tokensSetup()
 }
 
 // Cleanup database connections, etc.

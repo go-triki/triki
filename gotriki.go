@@ -39,7 +39,7 @@ func main() {
 	// "reroute" signals channel to server.Shutdown
 	go func() {
 		<-signals
-		log.Infoln("Cought signal. Exiting (waiting for open connections).")
+		log.Infoln("Caught signal. Exiting (waiting for open connections).")
 		server.Shutdown <- true
 	}()
 
