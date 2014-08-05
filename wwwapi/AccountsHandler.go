@@ -10,13 +10,7 @@ import (
 	"net/http"
 )
 
-type (
-	accountOutJSON struct {
-		Account db.User `json:"account"`
-	}
-)
-
-// AccountsIDGetHandler serves account information on /api/auth/accounts/:account_id.
+// AccountsIDGetHandler serves account information on /api/accounts/:account_id.
 func AccountsIDGetHandler(w http.ResponseWriter, r *http.Request) {
 	// log info
 	var info bytes.Buffer
@@ -48,5 +42,5 @@ func AccountsIDGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reply
-	writeJSON(w, &info, accountOutJSON{Account: usr})
+	writeJSON(w, &info, usr)
 }

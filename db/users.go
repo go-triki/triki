@@ -21,7 +21,7 @@ func usersC() *mgo.Collection {
 
 // User type stores user information (e.g. for authentication), also for MongoDB and JSON.
 type User struct {
-	ID       bson.ObjectId `json:"account_id"     bson:"_id"`
+	ID       bson.ObjectId `json:"id"             bson:"_id"`
 	Login    string        `json:"login"          bson:"login"`
 	Password string        `json:"pass,omitempty" bson:"-"`
 	PassHash []byte        `json:"-"              bson:"pass"`
@@ -83,6 +83,9 @@ func userCheck(usr *User) error {
 		return errors.New("Password too short")
 	}
 	// does login look like an email?
+	if len(usr.Login) < 1 {
+		return errors.New("Login cannot be empty")
+	}
 	at := strings.Index(usr.Login, "@")
 	if at < 1 || at == len(usr.Login)-1 {
 		return errors.New("Login needs to be an email address")
@@ -119,7 +122,7 @@ func userNew(usr *User) error {
 func UserSignup(login, pass string) error {
 	_, err := UserFindByLogin(login)
 	if err == nil { // FIXME: is this check enough?
-		return errors.New("User already exists.")
+		return errors.New("User already exists")
 	}
 	usr := User{
 		Login:    login,
