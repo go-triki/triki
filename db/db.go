@@ -11,11 +11,18 @@ import (
 
 // MongoDB collections' names
 const (
-	usersCName = "users"
+	usersCName  = "users"
+	tokensCName = "tokens"
 )
 
 var (
 	session, adminSession *mgo.Session
+)
+
+// options:
+var (
+	// prefix passwords before hashing
+	usersPassPrefix string = "" // TODO: set this up from conf
 )
 
 // Setup database connections, etc.

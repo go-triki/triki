@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	// tokensCName is the name of the tokens collection.
-	tokensCName = "tokens"
 	//tokensExpireAfter time.Duration = time.Duration(time.Second * 60 * 60 * 24 * 7) // 1 week
 	// tokensExpireAfter controls how long authentication tokens are valid.
 	tokensExpireAfter time.Duration = time.Duration(time.Second * 60 * 60) // 1h

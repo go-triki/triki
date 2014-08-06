@@ -24,6 +24,16 @@ const (
 type (
 	// type for context response variables
 	contextVarsKey int
+	// triki http error codes
+	errorCode int
+)
+
+// triki http error codes
+const (
+	statusError           = 0
+	statusUnauthorized    = 100
+	statusInvalidToken    = 110
+	statusResourceInvalid = 200
 )
 
 func init() {
@@ -48,19 +58,32 @@ func apiAccessLog(buf *bytes.Buffer, r *http.Request) {
 	fmt.Fprintf(buf, "API access to %s by %s.", r.RequestURI, r.RemoteAddr)
 }
 
+// Error writes an error response to w, similarily to http.Error.
+// If trikiCode is 0 it behaves as http.Error with string formatting.
+// If trikiCode is != 0 an arror code is encoded at the beginning of the response.
+func Error(w http.ResponseWriter, code int, trikiCode errorCode, format string, a ...interface{}) {
+	errorDesc := fmt.Sprintf(format, a...)
+	if trikiCode != 0 {
+		errorDesc = fmt.Sprintf("%d.%d: %s", code, trikiCode, errorDesc)
+	}
+	http.Error(w, errorDesc, code)
+}
+
 // AuthenticateHandler wraps regular http handler and handles authentication.
 func AuthenticateHandler(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tkn := r.Header.Get("X-AUTHENTICATION-TOKEN")
 		if tkn != "" {
 			if !bson.IsObjectIdHex(tkn) {
-				http.Error(w, "Invalid authentication token.", http.StatusForbidden)
+				Error(w, http.StatusForbidden, statusInvalidToken,
+					"Invalid authentication token.")
 				return
 			}
 			tknID := bson.ObjectIdHex(tkn)
 			usrID, err := db.TokenCheck(tknID)
 			if err != nil {
-				http.Error(w, "Invalid authentication token.", http.StatusForbidden)
+				Error(w, http.StatusForbidden, statusInvalidToken,
+					"Invalid authentication token.")
 				return
 			}
 			context.Set(r, contextKey, usrID)

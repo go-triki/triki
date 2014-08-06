@@ -65,7 +65,7 @@ func UserAuthenticate(login, pass string) (*User, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	err = bcrypt.CompareHashAndPassword(usr.PassHash, []byte(pass))
+	err = bcrypt.CompareHashAndPassword(usr.PassHash, []byte(usersPassPrefix+pass))
 	if err != nil {
 		return nil, "", err
 	}
@@ -109,7 +109,7 @@ func userNew(usr *User) error {
 		return err
 	}
 	usr.ID = bson.NewObjectId()
-	usr.PassHash, err = bcrypt.GenerateFromPassword([]byte(usr.Password), bcrypt.DefaultCost)
+	usr.PassHash, err = bcrypt.GenerateFromPassword([]byte(usersPassPrefix+usr.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}

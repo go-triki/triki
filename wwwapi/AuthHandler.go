@@ -35,7 +35,7 @@ func authDelay() {
 	time.Sleep(time.Duration(authDelayMs+rand.Intn(authDelayMs)) * time.Millisecond)
 }
 
-// AuthPostHandler handles user authentication in /api/auth.
+// AuthPostHandler handles user authentication (logging in) in /api/auth.
 func AuthPostHandler(w http.ResponseWriter, r *http.Request) {
 	// simple guard, FIXME
 	authDelay()
@@ -52,7 +52,8 @@ func AuthPostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// server doesn't understand the request
 		fmt.Fprintf(&info, " Bad request syntax: %s.", err)
-		http.Error(w, "Bad request syntax: "+err.Error(), http.StatusBadRequest)
+		Error(w, http.StatusBadRequest, statusError,
+			"Bad request syntax: %s.", err)
 		return
 	}
 
@@ -60,7 +61,8 @@ func AuthPostHandler(w http.ResponseWriter, r *http.Request) {
 	usr, token, err := db.UserAuthenticate(authIn.Session.Login, authIn.Session.Password)
 	if err != nil {
 		// not authenticated
-		http.Error(w, "Authentication failed for user `"+authIn.Session.Login+"`.", http.StatusForbidden)
+		Error(w, http.StatusForbidden, statusError,
+			"Authentication failed for user `%s`.", authIn.Session.Login)
 		fmt.Fprintf(&info, " Authentication failed for `%s`: %s.", authIn.Session.Login, err)
 		return
 	}
@@ -87,7 +89,8 @@ func AuthSignupPostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// server doesn't understand the request
 		fmt.Fprintf(&info, " Bad request syntax: %s.", err)
-		http.Error(w, "Bad request syntax: "+err.Error(), http.StatusBadRequest)
+		Error(w, http.StatusBadRequest, statusError,
+			"Bad request syntax: %s.", err)
 		return
 	}
 
@@ -95,14 +98,14 @@ func AuthSignupPostHandler(w http.ResponseWriter, r *http.Request) {
 	err = db.UserSignup(authIn.Session.Login, authIn.Session.Password)
 	if err != nil {
 		// not authenticated
-		http.Error(w, "Sign-up failed for user `"+authIn.Session.Login+
-			"`. Reason: "+err.Error()+".",
-			http.StatusForbidden)
+		Error(w, http.StatusForbidden, statusError,
+			"Sign-up failed for user `%s`. Reason: %s.", authIn.Session.Login, err)
 		fmt.Fprintf(&info, " Sign-up failed for `%s`: %s.", authIn.Session.Login, err)
 		return
 	}
 
 	// sign-up successful
-	http.Error(w, "Sign-up successful for user `"+authIn.Session.Login+"`. Email verification required.", http.StatusAccepted)
+	Error(w, http.StatusAccepted, statusError,
+		"Sign-up successful for user `%s`. Email verification required.", authIn.Session.Login)
 	fmt.Fprintf(&info, " User `%s` signed-up.", authIn.Session.Login)
 }
