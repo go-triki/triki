@@ -16,7 +16,7 @@ func (fatal FatalErrorPanic) Error() string {
 	return string(fatal)
 }
 
-// FatalErrorPanicType method mahes this type unique.
+// FatalErrorPanicType method makes this type unique.
 func (fatal FatalErrorPanic) FatalErrorPanicType() {
 	return
 }

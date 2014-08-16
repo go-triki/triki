@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/kornel661/triki/gotriki/db"
 	"bitbucket.org/kornel661/triki/gotriki/log"
 	"github.com/gorilla/mux"
-	"github.com/kornel661/manners"
+	"gopkg.in/kornel661/nserv.v0"
 	"net/http"
 	"os"
 	"os/signal"
@@ -33,14 +33,14 @@ func main() {
 	conf.Setup()
 
 	// catch signals & shutdown the server
-	server := manners.NewServer()
+	server := nserv.Server{}
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
 	// "reroute" signals channel to server.Shutdown
 	go func() {
 		<-signals
 		log.Infoln("Caught signal. Exiting (waiting for open connections).")
-		server.Shutdown <- true
+		server.Stop()
 	}()
 
 	// setup database connections, etc.
@@ -57,8 +57,10 @@ func main() {
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(conf.Server.Root + staticPrefix)))
 
 	// start server
-	log.Infof("Serving gotriki via www: http://%s\n", conf.Server.Addr)
-	if err := server.ListenAndServe(conf.Server.Addr, r); err != nil {
+	log.Infof("Serving triki via www: http://%s\n", conf.Server.Addr)
+	server.Addr = conf.Server.Addr
+	server.Handler = r
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 	log.Infoln("Exiting gracefully...")
