@@ -37,8 +37,7 @@ func tokensSetup() {
 		Sparse:      false,
 		ExpireAfter: tokensExpireAfter,
 	}
-	err := c.EnsureIndex(index)
-	if err != nil {
+	if err := c.EnsureIndex(index); err != nil {
 		log.Fatalf("MongoDB ensureIndex createdAt on tokens failed: %s.\n", err)
 	}
 	usrIndex := mgo.Index{
@@ -48,14 +47,13 @@ func tokensSetup() {
 		Background: false,
 		Sparse:     false,
 	}
-	err = c.EnsureIndex(usrIndex)
-	if err != nil {
+	if err := c.EnsureIndex(usrIndex); err != nil {
 		log.Fatalf("MongoDB ensureIndex userID on tokens failed: %s.\n", err)
 	}
 }
 
 // tokenNew creates new token for user usrID.
-// Returns token string and error message.
+// Returns token string and error message. FIXME: 'encrypt/randomize' the string
 func tokenNew(usrID bson.ObjectId) (string, error) {
 	var token Token
 	token.ID = bson.NewObjectId()
