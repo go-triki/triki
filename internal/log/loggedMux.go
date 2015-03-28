@@ -36,6 +36,6 @@ func (mux *LoggedMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if errors != nil {
 		str = fmt.Sprintf("%s | errors: %v", str, errors)
 	}
-	StdLog.Println(str)
+	stdLog.Println(str)
 	context.Clear(r)
 }

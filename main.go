@@ -4,6 +4,7 @@ Gotriki server of the Trikipedia - the truth encyclopedia.
 package main // import "gopkg.in/triki.v0"
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,7 +13,7 @@ import (
 	"gopkg.in/kornel661/nserv.v0"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/triki.v0/internal/db"
-	"gopkg.in/triki.v0/internal/log"
+	tlog "gopkg.in/triki.v0/internal/log"
 )
 
 const (
@@ -32,7 +33,7 @@ func main() {
 	// redirect "stop" signals to server.Stop
 	go func() {
 		<-signals
-		log.StdLog.Infoln("Caught signal. Exiting (waiting for open connections to termiate).")
+		log.Infoln("Caught signal. Exiting (waiting for open connections to termiate).")
 		server.Stop()
 	}()
 
@@ -41,7 +42,8 @@ func main() {
 	defer db.Cleanup()
 
 	// setup logger
-	defer log.Flush()
+	// TODO(km): log.DbLog = ...
+	defer tlog.Flush()
 
 	r := mux.NewRouter()
 
@@ -54,7 +56,7 @@ func main() {
 
 	// start server
 	log.Infof("Serving triki via www: http://%s\n", *optServerRoot)
-	server.Handler = r
+	server.Handler = &tlog.LoggedMux{r}
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
