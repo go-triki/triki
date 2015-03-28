@@ -1,54 +1,31 @@
 /*
 Package log is a gotriki logging package.
 */
-package log
+package log // import "gopkg.in/triki.v0/internal/log"
 
 import (
+	"bufio"
 	"log"
+	"os"
 )
 
-// Type that is "paniced" in fatal log functions
-type FatalErrorPanic string
+// DbLogger is a type of functions that write logs to databases.
+type DbLogger func(map[string]interface{}) error
 
-// Error returns error description.
-func (fatal FatalErrorPanic) Error() string {
-	return string(fatal)
-}
-
-// FatalErrorPanicType method makes this type unique.
-func (fatal FatalErrorPanic) FatalErrorPanicType() {
-	return
-}
-
-const (
-	fatalErr FatalErrorPanic = "Fatal server error"
+var (
+	stderr = bufio.NewWriter(os.Stderr)
+	// StdLog is a log.Logger that is going to be used by this package.
+	StdLog = log.New(stderr, "triki", LstdFlags)
+	// DbLog is a function used by this package to write logs to a database.
+	DbLog DbLogger
 )
 
-func Warningf(format string, args ...interface{}) {
-	log.Printf(format, args...)
-}
+type errkey int
 
-func Warningln(msg string) {
-	Warningf("%s\n", msg)
-}
+// ErrKey is a key to retreive error list from context.
+const errKey errkey = 0
 
-func Infof(format string, args ...interface{}) {
-	//glog.Infof(format, args...)
-	log.Printf(format, args...)
-}
-
-func Infoln(msg string) {
-	Infof("%s\n", msg)
-}
-
-func Fatalf(format string, args ...interface{}) {
-	//glog.Fatalf(format, args...)
-	log.Printf(format, args...)
-	panic(fatalErr)
-}
-
-func Fatal(v interface{}) {
-	//glog.Fatalf(format, args...)
-	log.Print(v)
-	panic(fatalErr)
+// Flush flushes StdLog to ensure all messages went through.
+func Flush() {
+	stderr.Flush()
 }
