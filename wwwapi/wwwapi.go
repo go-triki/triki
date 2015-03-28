@@ -4,7 +4,7 @@ Package wwwapi supplies handlers for gotriki www api.
 package wwwapi
 
 import (
-	"bitbucket.org/kornel661/triki/gotriki/db"
+	"gopkg.in/triki.v0/db"
 	"bytes"
 	"encoding/json"
 	"fmt"

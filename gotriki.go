@@ -4,11 +4,11 @@ Gotriki server of the Trikipedia - the truth encyclopedia.
 package main
 
 import (
-	"bitbucket.org/kornel661/triki/gotriki/conf"
-	"bitbucket.org/kornel661/triki/gotriki/db"
-	"bitbucket.org/kornel661/triki/gotriki/log"
 	"github.com/gorilla/mux"
 	"gopkg.in/kornel661/nserv.v0"
+	"gopkg.in/triki.v0/conf"
+	"gopkg.in/triki.v0/db"
+	"gopkg.in/triki.v0/log"
 	"net/http"
 	"os"
 	"os/signal"

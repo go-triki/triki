@@ -4,7 +4,7 @@ Package db wraps MongoDB database for triki.
 package db
 
 import (
-	"bitbucket.org/kornel661/triki/gotriki/conf"
+	"gopkg.in/triki.v0/conf"
 	"gopkg.in/mgo.v2"
 	"log"
 )

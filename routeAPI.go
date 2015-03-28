@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bitbucket.org/kornel661/triki/gotriki/wwwapi"
+	"gopkg.in/triki.v0/wwwapi"
 	"github.com/gorilla/mux"
 	"net/http"
 )

@@ -1,8 +1,8 @@
 package wwwapi
 
 import (
-	"bitbucket.org/kornel661/triki/gotriki/db"
-	"bitbucket.org/kornel661/triki/gotriki/log"
+	"gopkg.in/triki.v0/db"
+	"gopkg.in/triki.v0/log"
 	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
