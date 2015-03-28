@@ -1,9 +1,10 @@
 package main
 
 import (
-	"gopkg.in/triki.v0/wwwapi"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"gopkg.in/triki.v0/internal/wwwapi"
 )
 
 const (

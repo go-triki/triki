@@ -4,9 +4,10 @@ Package db wraps MongoDB database for triki.
 package db
 
 import (
-	"gopkg.in/triki.v0/conf"
-	"gopkg.in/mgo.v2"
 	"log"
+
+	"gopkg.in/mgo.v2"
+	"gopkg.in/triki.v0/internal/conf"
 )
 
 // MongoDB collections' names

@@ -4,15 +4,16 @@ Package wwwapi supplies handlers for gotriki www api.
 package wwwapi
 
 import (
-	"gopkg.in/triki.v0/db"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/context"
-	"gopkg.in/mgo.v2/bson"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/context"
+	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/triki.v0/internal/db"
 )
 
 const (

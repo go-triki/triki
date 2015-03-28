@@ -1,13 +1,14 @@
 package wwwapi
 
 import (
-	"gopkg.in/triki.v0/db"
-	"gopkg.in/triki.v0/log"
 	"bytes"
 	"fmt"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
-	"net/http"
+	"gopkg.in/triki.v0/internal/db"
+	"gopkg.in/triki.v0/internal/log"
 )
 
 // AccountsIDGetHandler serves account information on /api/accounts/:account_id.

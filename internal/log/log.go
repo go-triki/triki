@@ -4,7 +4,6 @@ Package log is a gotriki logging package.
 package log
 
 import (
-	//"github.com/golang/glog"
 	"log"
 )
 

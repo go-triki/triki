@@ -1,14 +1,15 @@
 package wwwapi
 
 import (
-	"gopkg.in/triki.v0/db"
-	"gopkg.in/triki.v0/log"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"gopkg.in/triki.v0/internal/db"
+	"gopkg.in/triki.v0/internal/log"
 )
 
 type (

@@ -8,12 +8,13 @@ package conf
 import (
 	"crypto/tls"
 	"flag"
-	"gopkg.in/mgo.v2"
 	"log"
 	"net"
 	"runtime"
 	"strings"
 	"time"
+
+	"gopkg.in/mgo.v2"
 )
 
 // flag variables
