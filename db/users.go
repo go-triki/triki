@@ -1,8 +1,8 @@
 package db
 
 import (
-	"code.google.com/p/go.crypto/bcrypt"
 	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
