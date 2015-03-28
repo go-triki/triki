@@ -1,0 +1,14 @@
+# Please keep these lists sorted.
+
+Authors
+=======
+
+
+Kornel Maczyński <kornel661@gmail.com>
+
+
+
+Contributors
+============
+
+
