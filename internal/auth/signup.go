@@ -2,16 +2,16 @@ package auth
 
 import (
 	"fmt"
-	"net/http"
 
+	"golang.org/x/net/context"
 	"gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/user"
 )
 
 // UserSignup signs given user up, pending email verification.
 // TODO write email verification
-func UserSignup(login, pass string, req *http.Request) *log.Error {
-	is, err := user.DBExists(login)
+func UserSignup(cx context.Context, login, pass string) *log.Error {
+	is, err := user.DBExists(cx, login)
 	if err != nil {
 		return log.InternalServerErr(err)
 	} else if is {
@@ -22,5 +22,5 @@ func UserSignup(login, pass string, req *http.Request) *log.Error {
 		Pass: pass,
 	}
 	// TODO add logging
-	return user.New(&usr)
+	return user.New(cx, &usr)
 }

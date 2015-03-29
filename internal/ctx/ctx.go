@@ -2,6 +2,8 @@
 // method returns the values associated with a specific HTTP request in the
 // github.com/gorilla/context package.
 //
+// Additionally, access to http.Requests and mgo.Sessions is provided.
+//
 // Original at https://blog.golang.org/context/gorilla/gorilla.go
 package ctx
 
@@ -61,13 +63,13 @@ func HTTPRequest(ctx context.Context) (*http.Request, bool) {
 func DBSessionFromReq(r *http.Request) (*mgo.Session, *log.Error) {
 	sess, ok := gcontext.GetOk(r, sessKey)
 	if !ok {
-		return nil, log.InternalServerErr(errors.New(
-			fmt.Sprintf("couldn't find session associated with request %v", *r)))
+		return nil, log.InternalServerErr(
+			fmt.Errorf("couldn't find session associated with request %v", *r))
 	}
 	s, ok := sess.(*mgo.Session)
 	if !ok {
-		return nil, log.InternalServerErr(errors.New(
-			fmt.Sprintf("couldn't find session (type mismatch) associated with request %v", *r)))
+		return nil, log.InternalServerErr(fmt.Errorf(
+			"couldn't find session (type mismatch) associated with request %v", *r))
 	}
 	return s, nil
 }
@@ -76,17 +78,19 @@ func DBSessionFromReq(r *http.Request) (*mgo.Session, *log.Error) {
 func DBSession(c context.Context) (*mgo.Session, *log.Error) {
 	req, ok := HTTPRequest(c)
 	if !ok {
-		return nil, log.InternalServerErr(errors.New("couldn't find request associated with context"))
+		return nil, log.InternalServerErr(errors.New(
+			"couldn't find request associated with context"))
 	}
 	return DBSessionFromReq(req)
 }
 
 // SetDBSession saves mongo session associated with the context.
-func SetDBSession(c context.Context, sess *mgo.Session) bool {
+func SetDBSession(c context.Context, sess *mgo.Session) *log.Error {
 	req, ok := HTTPRequest(c)
 	if !ok {
-		return false
+		return log.InternalServerErr(errors.New(
+			"couldn't associate *mgo.Session with a context.Context"))
 	}
 	gcontext.Set(req, sessKey, sess)
-	return true
+	return nil
 }

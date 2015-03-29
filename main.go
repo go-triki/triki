@@ -23,6 +23,8 @@ var (
 )
 
 func main() {
+	// flush logger
+	defer log.Flush()
 
 	// catch signals & shutdown the server
 	signals := make(chan os.Signal, 1)
@@ -38,10 +40,6 @@ func main() {
 	mongo.Setup()
 	defer mongo.Cleanup()
 
-	// setup logger
-	// TODO(km): log.DbLog = ...
-	defer log.Flush()
-
 	r := mux.NewRouter()
 	// log.LoggedMux clears contexts for us
 	r.KeepContext = true
@@ -54,10 +52,11 @@ func main() {
 	r.PathPrefix(staticPrefix).Handler(http.FileServer(http.Dir(optServRoot)))
 
 	// start server
-	log.StdLog.Infof("Serving triki via www: http://%s\n", *optServerRoot)
+	log.StdLog.Infof("Serving triki via www: http://%s\n", server.Addr)
 	server.Handler = &log.LoggedMux{r}
 	if err := server.ListenAndServe(); err != nil {
-		log.StdLog.Fatal(err)
+		log.StdLog.Println(err)
+		return
 	}
 	log.StdLog.Infoln("Exiting gracefully, please wait...")
 	server.Wait()

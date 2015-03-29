@@ -21,8 +21,8 @@ func (mux *LoggedMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	elaps := time.Since(start)
 	errors := context.Get(r, errKey)
 	// log to DB
-	err := DbLog(map[string]interface{}{
-		"start":  start,
+	err := DBLog(map[string]interface{}{
+		"time":   start,
 		"elaps":  elaps,
 		"method": r.Method,
 		"url":    r.URL.Path,

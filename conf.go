@@ -32,6 +32,7 @@ var (
 
 // server config
 var (
+	// directory with static files to serve
 	optServRoot string
 )
 

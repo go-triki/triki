@@ -9,16 +9,12 @@ import (
 	"os"
 )
 
-// DbLogger is a type of functions that write logs to databases.
-type DbLogger func(map[string]interface{}) error
-
 var (
 	stderr = bufio.NewWriter(os.Stderr)
 	// StdLog is a log.Logger that is going to be used by this package.
 	StdLog = log.New(stderr, "triki", log.LstdFlags)
-	// DbLog is a function used by this package to write logs to a database.
-	// Not safe for concurrent use (first set and only then serve).
-	DbLog DbLogger
+	// DBLog is a function used by this package to write logs to a database.
+	DBLog func(map[string]interface{}) error
 )
 
 func init() {
