@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"gopkg.in/mgo.v2"
+	tlog "gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/token"
 	"gopkg.in/triki.v0/internal/models/user"
 )
@@ -28,11 +29,13 @@ var (
 
 // Setup database connections, etc.
 func Setup() {
+	mgo.SetLogger(tlog.StdLog)
 	var err error
 	session, err = mgo.DialWithInfo(&DialInfo)
 	if err != nil {
 		log.Fatalf("Error connecting to MongoDB: %s.\n", err)
 	}
+
 	session.SetSafe(&mgo.Safe{})
 	session.SetMode(mgo.Monotonic, true)
 
@@ -59,7 +62,7 @@ func Cleanup() {
 
 // usersSetup ensures that the users collection is setup correctly.
 func usersSetup() {
-	c := usersC()
+	c := adminSession.DB("").C(usersCName)
 	index := mgo.Index{
 		Key:        []string{"usr"},
 		Unique:     true,
@@ -78,7 +81,7 @@ func usersSetup() {
 }
 
 func tokensSetup() {
-	c := tokensC()
+	c := adminSession.DB("").C(tokensCName)
 	index := mgo.Index{
 		Key:         []string{"birth"},
 		Unique:      false,

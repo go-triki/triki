@@ -4,16 +4,14 @@ Gotriki server of the Trikipedia - the truth encyclopedia.
 package main // import "gopkg.in/triki.v0"
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 
 	"github.com/gorilla/mux"
 	"gopkg.in/kornel661/nserv.v0"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/triki.v0/internal/db/mongodrv"
-	tlog "gopkg.in/triki.v0/internal/log"
+	"gopkg.in/triki.v0/internal/log"
 )
 
 const (
@@ -32,7 +30,7 @@ func main() {
 	// redirect "stop" signals to server.Stop
 	go func() {
 		<-signals
-		log.Infoln("Caught signal. Exiting (waiting for open connections to termiate).")
+		log.StdLog.Infoln("Caught signal. Exiting (waiting for open connections to termiate).")
 		server.Stop()
 	}()
 
@@ -42,9 +40,11 @@ func main() {
 
 	// setup logger
 	// TODO(km): log.DbLog = ...
-	defer tlog.Flush()
+	defer log.Flush()
 
 	r := mux.NewRouter()
+	// log.LoggedMux clears contexts for us
+	r.KeepContext = true
 
 	// setup API routing
 	apiRouter := r.PathPrefix(apiPrefix).Subrouter()
@@ -54,11 +54,11 @@ func main() {
 	r.PathPrefix(staticPrefix).Handler(http.FileServer(http.Dir(optServRoot)))
 
 	// start server
-	log.Infof("Serving triki via www: http://%s\n", *optServerRoot)
-	server.Handler = &tlog.LoggedMux{r}
+	log.StdLog.Infof("Serving triki via www: http://%s\n", *optServerRoot)
+	server.Handler = &log.LoggedMux{r}
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		log.StdLog.Fatal(err)
 	}
-	log.Infoln("Exiting gracefully, please wait...")
+	log.StdLog.Infoln("Exiting gracefully, please wait...")
 	server.Wait()
 }

@@ -14,8 +14,8 @@ type DbLogger func(map[string]interface{}) error
 
 var (
 	stderr = bufio.NewWriter(os.Stderr)
-	// stdLog is a log.Logger that is going to be used by this package.
-	stdLog = log.New(stderr, "triki", log.LstdFlags)
+	// StdLog is a log.Logger that is going to be used by this package.
+	StdLog = log.New(stderr, "triki", log.LstdFlags)
 	// DbLog is a function used by this package to write logs to a database.
 	// Not safe for concurrent use (first set and only then serve).
 	DbLog DbLogger

@@ -2,6 +2,7 @@
 package user // import "gopkg.in/triki.v0/internal/models/user"
 
 import (
+	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/triki.v0/internal/log"
 )
@@ -15,11 +16,11 @@ var (
 
 var (
 	// DBFind searches the DB for user with login/email == usr.
-	DBFind func(login string) (usr *T, err *log.Error)
+	DBFind func(cx context.Context, login string) (usr *T, err *log.Error)
 	// DBInsert inserts user usr into the DB.
-	DBInsert func(usr *T) *log.Error
+	DBInsert func(cx context.Context, usr *T) *log.Error
 	// DBExists checks if user with login/email == usr exists in the DB.
-	DBExists func(login string) (exists bool, err *log.Error)
+	DBExists func(cx context.Context, login string) (exists bool, err *log.Error)
 )
 
 // T type (user.T) stores user information (e.g. for authentication), also for MongoDB and JSON.
@@ -38,7 +39,7 @@ type T struct {
 //
 // User.Password is hashed into User.PassHash, ID is generated. Some other fields
 // are sanitized (usr struct is updated accordingly).
-func New(usr *T) *log.Error {
+func New(cx context.Context, usr *T) *log.Error {
 	if usr.Nick == "" {
 		usr.Nick = usr.Usr
 	}
@@ -51,5 +52,5 @@ func New(usr *T) *log.Error {
 		return err
 	}
 	usr.ID = bson.NewObjectId()
-	return DBInsert(usr)
+	return DBInsert(cx, usr)
 }

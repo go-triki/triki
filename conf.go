@@ -17,6 +17,8 @@ import (
 
 	"gopkg.in/go-kornel/go-toml-config.v0"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/triki.v0/internal/auth"
+	"gopkg.in/triki.v0/internal/db/mongodrv"
 	"gopkg.in/triki.v0/internal/models/user"
 )
 
@@ -53,6 +55,7 @@ func init() {
 	// server config
 	config.StringVar(&optServRoot, "server.root", "./www", "directory with static files to serve")
 	config.StringVar(&server.Addr, "server.addr", "localhost:8765", "address and port to serve on")
+	config.DurationVar(&auth.RequestTimeout, "server.request_timeout", 3*time.Second, "(weak) time limit for HTTP request processing")
 
 	// mongo config
 	config.StringVar(&optMongoAddrs, "mongo.Addrs",

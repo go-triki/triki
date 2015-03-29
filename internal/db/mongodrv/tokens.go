@@ -3,8 +3,10 @@ package mongo
 import (
 	"time"
 
+	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/triki.v0/internal/ctx"
 	"gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/token"
 )
@@ -16,14 +18,22 @@ const (
 )
 
 // tokensC returns the tokens collection.
-func tokensC() *mgo.Collection {
-	return adminSession.Copy().DB("").C(tokensCName)
+func tokensC(cx context.Context) (*mgo.Collection, *log.Error) {
+	sess, err := ctx.DBSession(cx)
+	if err != nil {
+		return nil, err
+	}
+	return sess.DB("").C(tokensCName), nil
 }
 
 // TokenFind finds given token in the DB.
-func TokenFind(tknID []byte) (*token.T, *log.Error) {
+func TokenFind(cx context.Context, tknID []byte) (*token.T, *log.Error) {
 	var token token.T
-	err := tokensC().Find(bson.M{"_id": tknID}).One(&token)
+	col, er := tokensC(cx)
+	if er != nil {
+		return nil, er
+	}
+	err := col.Find(bson.M{"_id": tknID}).One(&token)
 	if err != nil {
 		return nil, log.InternalServerErr(err)
 	}
@@ -31,8 +41,12 @@ func TokenFind(tknID []byte) (*token.T, *log.Error) {
 }
 
 // TokenInsert inserts the token into the DB.
-func TokenInsert(tkn *token.T) *log.Error {
-	err := tokensC().Insert(tkn)
+func TokenInsert(cx context.Context, tkn *token.T) *log.Error {
+	col, er := tokensC(cx)
+	if er != nil {
+		return er
+	}
+	err := col.Insert(tkn)
 	if err != nil {
 		return log.InternalServerErr(err)
 	}
