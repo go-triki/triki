@@ -17,7 +17,7 @@ type LoggedMux struct {
 
 func (mux *LoggedMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	mux.ServeMux.ServeHTTP(w, r)
+	mux.Router.ServeHTTP(w, r)
 	elaps := time.Since(start)
 	errors := context.Get(r, errKey)
 	// log to DB

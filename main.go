@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/kornel661/nserv.v0"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/triki.v0/internal/db"
+	"gopkg.in/triki.v0/internal/db/mongodrv"
 	tlog "gopkg.in/triki.v0/internal/log"
 )
 
@@ -38,8 +38,8 @@ func main() {
 	}()
 
 	// setup database connections, etc.
-	db.Setup()
-	defer db.Cleanup()
+	mongo.Setup()
+	defer mongo.Cleanup()
 
 	// setup logger
 	// TODO(km): log.DbLog = ...

@@ -1,7 +1,7 @@
 /*
 Package db wraps MongoDB database for triki.
 */
-package db
+package mongo // import "gopkg.in/triki.v0/internal/db/mongodrv"
 
 import (
 	"log"
@@ -17,13 +17,7 @@ const (
 )
 
 var (
-	session, adminSession *mgo.Session
-)
-
-// options:
-var (
-	// prefix passwords before hashing
-	usersPassPrefix string = "" // TODO: set this up from conf
+	session, adminSession, logSession *mgo.Session
 )
 
 // Setup database connections, etc.
@@ -35,9 +29,14 @@ func Setup() {
 	}
 	session.SetSafe(&mgo.Safe{})
 	session.SetMode(mgo.Monotonic, true)
+
 	adminSession = session.Copy()
 	adminSession.SetSafe(&mgo.Safe{WMode: "majority", FSync: true})
 	adminSession.SetMode(mgo.Strong, true)
+
+	// TODO
+	logSession = session.Copy()
+	//logSession.SetMode(mgo.)
 
 	usersSetup()
 	tokensSetup()
@@ -48,5 +47,6 @@ func Cleanup() {
 	log.Println("Closing database connections...")
 	adminSession.Close()
 	session.Close()
+	logSession.Close()
 	log.Println("Database connections closed.")
 }
