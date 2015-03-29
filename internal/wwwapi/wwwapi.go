@@ -13,7 +13,6 @@ import (
 
 	"github.com/gorilla/context"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/triki.v0/internal/db"
 )
 
 const (

@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/triki.v0/internal/log"
+	"gopkg.in/triki.v0/internal/rands"
 )
 
 // checkPass carries out some sanity checks on the given user (pass/nick length, is
@@ -34,9 +35,9 @@ func (usr *T) checkPass() *log.Error {
 func (usr *T) setPass(pass string) *log.Error {
 	var err error
 	usr.Pass = pass
-	salt := "" // TODO
+	salt := rands.New(8)
 	usr.Salt = salt
-	usr.PassHash, err = bcrypt.GenerateFromPassword([]byte(PassSalt+pass+salt), bcrypt.DefaultCost)
+	usr.PassHash, err = bcrypt.GenerateFromPassword(append([]byte(PassSalt+pass), salt...), bcrypt.DefaultCost)
 	if err != nil {
 		log.InternalServerErr(err)
 	}

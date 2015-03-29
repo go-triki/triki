@@ -10,6 +10,7 @@ type trikiCode int
 const (
 	incorrectPassTC    trikiCode = 100
 	badSignupDetailsTC trikiCode = 200
+	dbNotFoundTC       trikiCode = 300
 )
 
 // Error instances represent error encountered while serving www requests.
@@ -32,10 +33,21 @@ func InternalServerErr(err error) *Error {
 	}
 }
 
+// BadSignupDetailsErr returns an error indicating that login/password/nick
+// supplied by the user don't conform to triki's standards.
 func BadSignupDetailsErr(detail string) *Error {
 	return &Error{
 		What:      detail,
 		TrikiCode: badSignupDetailsTC,
+	}
+}
+
+// DBNotFoundErr returns an error indicating that either requested item in not
+// in the DB or there was a DB error.
+func DBNotFoundErr(err error) *Error {
+	return &Error{
+		What:      err.Error(),
+		TrikiCode: dbNotFoundTC,
 	}
 }
 

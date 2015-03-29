@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"gopkg.in/triki.v0/internal/db"
 	"gopkg.in/triki.v0/internal/log"
 )
 

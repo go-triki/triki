@@ -21,8 +21,7 @@ const (
 )
 
 var (
-	server    = nserv.Server{}
-	mDialInfo = mgo.DialInfo{}
+	server = nserv.Server{}
 )
 
 func main() {

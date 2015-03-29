@@ -1,11 +1,12 @@
 package mongo
 
 import (
-	"log"
 	"time"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/triki.v0/internal/log"
+	"gopkg.in/triki.v0/internal/models/token"
 )
 
 const (
@@ -14,60 +15,26 @@ const (
 	tokensExpireAfter time.Duration = time.Duration(time.Second * 60 * 60) // 1h
 )
 
-type (
-	// Token holds information associated with a given authentication token
-	Token struct {
-		ID        bson.ObjectId `bson:"_id"`
-		CreatedAt time.Time     `bson:"createdAt"`
-		UserID    bson.ObjectId `bson:"userID"`
-	}
-)
-
 // tokensC returns the tokens collection.
 func tokensC() *mgo.Collection {
 	return adminSession.Copy().DB("").C(tokensCName)
 }
 
-func tokensSetup() {
-	c := tokensC()
-	index := mgo.Index{
-		Key:         []string{"createdAt"},
-		Unique:      false,
-		DropDups:    false,
-		Background:  false,
-		Sparse:      false,
-		ExpireAfter: tokensExpireAfter,
-	}
-	if err := c.EnsureIndex(index); err != nil {
-		log.Fatalf("MongoDB ensureIndex createdAt on tokens failed: %s.\n", err)
-	}
-	usrIndex := mgo.Index{
-		Key:        []string{"userID"},
-		Unique:     false,
-		DropDups:   false,
-		Background: false,
-		Sparse:     false,
-	}
-	if err := c.EnsureIndex(usrIndex); err != nil {
-		log.Fatalf("MongoDB ensureIndex userID on tokens failed: %s.\n", err)
-	}
-}
-
-// tokenNew creates new token for user usrID.
-// Returns token string and error message. FIXME: 'encrypt/randomize' the string
-func tokenNew(usrID bson.ObjectId) (string, error) {
-	var token Token
-	token.ID = bson.NewObjectId()
-	token.CreatedAt = time.Now()
-	token.UserID = usrID
-	err := tokensC().Insert(token)
-	return token.ID.Hex(), err
-}
-
-// TokenCheck check if the given token is valid.
-// Returns authenticated user and error.
-func TokenCheck(tknID bson.ObjectId) (bson.ObjectId, error) {
-	var token Token
+// TokenFind finds given token in the DB.
+func TokenFind(tknID []byte) (*token.T, *log.Error) {
+	var token token.T
 	err := tokensC().Find(bson.M{"_id": tknID}).One(&token)
-	return token.UserID, err
+	if err != nil {
+		return nil, log.InternalServerErr(err)
+	}
+	return &token, nil
+}
+
+// TokenInsert inserts the token into the DB.
+func TokenInsert(tkn *token.T) *log.Error {
+	err := tokensC().Insert(tkn)
+	if err != nil {
+		return log.InternalServerErr(err)
+	}
+	return nil
 }

@@ -23,6 +23,7 @@ import (
 // general config
 var (
 	optShowConf bool
+	optMoreHelp bool
 	optConfFile string
 	optNumCpus  int
 )
@@ -41,10 +42,11 @@ var (
 
 // init parses command line flags and config files.
 func init() {
-	config.CommandLine = &config.Set{flag.CommandLine}
+	//config.CommandLine = &config.Set{flag.CommandLine}
 	// general config
-	config.BoolVar(&optShowConf, "show_config", false, "print currently loaded configuration and exit")
-	config.StringVar(&optConfFile, "config", "", "`path` to a TOML configuration file")
+	flag.BoolVar(&optShowConf, "show_config", false, "print currently loaded configuration and exit")
+	flag.BoolVar(&optMoreHelp, "more_help", false, "print help for more triki options")
+	flag.StringVar(&optConfFile, "config", "", "`path` to a TOML configuration file")
 	config.StringVar(&user.PassSalt, "pass_salt", "", "used to `salt` passwords in the DB")
 	config.IntVar(&optNumCpus, "num_cpus", 0, "number of CPUs to use, 0 to autodetect")
 
@@ -59,25 +61,30 @@ func init() {
 		true, "use SSL for connections with MongoDB server")
 	config.BoolVar(&optMongoSSLInsecure, "mongo.SSLInsecure",
 		false, "don't verify MongoDB server's certificates, suspectible to man-in-the-middle attack, insecure!")
-	config.BoolVar(&mDialInfo.Direct, "mongo.Direct",
-		false, "direct connection with MongoDB?")
-	config.DurationVar(&mDialInfo.Timeout, "mongo.DialTimeout",
+	config.BoolVar(&mongo.DialInfo.Direct, "mongo.Direct",
+		false, "direct connection with MongoDB (don't connect with the whole cluster)")
+	config.DurationVar(&mongo.DialInfo.Timeout, "mongo.DialTimeout",
 		5*time.Second, "timeout for connecting to MongoDB instance (must be >=0)")
-	config.StringVar(&mDialInfo.Database, "mongo.Database",
+	config.StringVar(&mongo.DialInfo.Database, "mongo.Database",
 		"triki", "MongoDB database with triki data")
-	config.String(&mDialInfo.Username, "mongo.Usr",
+	config.String(&mongo.DialInfo.Username, "mongo.Usr",
 		"triki", "username for authentication to MongoDB")
-	config.String(&mDialInfo.Password, "mongo.Pass",
+	config.String(&mongo.DialInfo.Password, "mongo.Pass",
 		"triki", "password for authentication to MongoDB")
 	////////////////////////////////////////////////////////////////////////////
 	// parse flags
-	config.ParseArgs()
+	flag.Parse()
+	if optMoreHelp {
+		config.CommandLine.PrintDefaults()
+		os.Exit(0)
+	}
 	// parse config file
 	if optConfFile != "" {
 		if err := config.Parse(optConfFile); err != nil {
 			log.Fatalf("Error reading config file `%s`:\n%v", optConfFile, err)
 		}
 	}
+	config.ParseArgs()
 	// write out option values?
 	if optShowConf {
 		config.PrintCurrentValues()
@@ -93,10 +100,10 @@ func init() {
 	}
 	runtime.GOMAXPROCS(optNumCpus)
 	//server config
-	mDialInfo.Addrs = strings.Split(*optMongoAddrss, ",")
+	mongo.DialInfo.Addrs = strings.Split(*optMongoAddrss, ",")
 	// mongo config
 	if *optMongoSSL {
-		mDialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		mongo.DialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 			conn, err := tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: *optMongoSSLInsecure})
 			if err != nil {
 				log.Printf("MongoDB TLS connection error: %s.\n", err.Error())
@@ -105,7 +112,7 @@ func init() {
 		}
 	}
 
-	if mDialInfo.Timeout < 0 {
+	if mongo.DialInfo.Timeout < 0 {
 		log.Fatalln("MongoDB dial timeout `mongo.DialTimeout` must be nonnegative.")
 	}
 }
