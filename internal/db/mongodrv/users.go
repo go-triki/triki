@@ -4,14 +4,13 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/triki.v0/internal/ctx"
 	"gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/user"
 )
 
 // usersC returns the users collection.
 func usersC(cx context.Context) (*mgo.Collection, *log.Error) {
-	sess, err := ctx.DBSession(cx)
+	sess, err := getSession(cx, sessKey)
 	if err != nil {
 		return nil, err
 	}

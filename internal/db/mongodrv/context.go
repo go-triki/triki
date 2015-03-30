@@ -12,57 +12,44 @@ import (
 	"gopkg.in/triki.v0/internal/log"
 )
 
-type ctxKey int
+type sessionKey int
 
-const sessKey ctxKey = 1
+const (
+	sessKey sessionKey = iota
+	adminSessKey
+	numOfSessKeys
+)
 
-// SessionFromReq retrieves DB session associated with the request.
-func SessionFromReq(r *http.Request) (*mgo.Session, *log.Error) {
-	sess, ok := gcontext.GetOk(r, sessKey)
-	if !ok {
-		return nil, log.InternalServerErr(
-			fmt.Errorf("couldn't find session associated with request %v", *r))
+func CloseSessions(req *http.Request) {
+	for i := sessionKey(0); i < numOfSessKeys; i++ {
+		val, ok := gcontext.GetOk(req, i)
+		if ok {
+			sess, ok := val.(*mgo.Session)
+			if ok {
+				sess.Close()
+			}
+		}
 	}
-	s, ok := sess.(*mgo.Session)
-	if !ok {
-		return nil, log.InternalServerErr(fmt.Errorf(
-			"couldn't find session (type mismatch) associated with request %v", *r))
-	}
-	return s, nil
 }
 
-// Session retrieves DB session associated with the context.
-func Session(c context.Context) (*mgo.Session, *log.Error) {
-	req, ok := ctx.HTTPRequest(c)
+func getSession(cx context.Context, typ sessionKey) (*mgo.Session, *log.Error) {
+	req, ok := ctx.HTTPRequest(cx)
 	if !ok {
 		return nil, log.InternalServerErr(errors.New(
 			"couldn't find request associated with context"))
 	}
-	return SessionFromReq(req)
-}
-
-// SetSession saves DB session associated with the context.
-func setSession(c context.Context, sess *mgo.Session) *log.Error {
-	req, ok := ctx.HTTPRequest(c)
-	if !ok {
-		return log.InternalServerErr(errors.New(
-			"couldn't associate *mgo.Session with a context.Context"))
+	if s, ok := gcontext.GetOk(req, typ); ok {
+		return s.(*mgo.Session), nil
 	}
-	gcontext.Set(req, sessKey, sess)
-	return nil
-}
-
-// SaveSession creates a new DB session of a given type and associates it
-// with the context. The session is typically closed by auth.Handler.
-func SaveSession(c context.Context, typ ctx.SessionType) *log.Error {
 	var sess *mgo.Session
 	switch typ {
-	case ctx.RegularSession:
+	case sessKey:
 		sess = session.Copy()
-	case ctx.AdminSession:
+	case adminSessKey:
 		sess = adminSession.Copy()
 	default:
-		return log.InternalServerErr(fmt.Errorf("unknown session type %v", typ))
+		return nil, log.InternalServerErr(fmt.Errorf("unknown session type %v", typ))
 	}
-	return setSession(c, sess)
+	gcontext.Set(req, typ, sess)
+	return sess, nil
 }

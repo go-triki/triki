@@ -6,7 +6,6 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/triki.v0/internal/ctx"
 	"gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/token"
 )
@@ -19,7 +18,7 @@ const (
 
 // tokensC returns the tokens collection.
 func tokensC(cx context.Context) (*mgo.Collection, *log.Error) {
-	sess, err := ctx.DBSession(cx)
+	sess, err := getSession(cx, adminSessKey)
 	if err != nil {
 		return nil, err
 	}

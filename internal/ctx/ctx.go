@@ -2,8 +2,6 @@
 // method returns the values associated with a specific HTTP request in the
 // github.com/gorilla/context package.
 //
-// Additionally, access to http.Requests and mgo.Sessions is provided.
-//
 // Original at https://blog.golang.org/context/gorilla/gorilla.go
 package ctx
 
@@ -12,8 +10,6 @@ import (
 
 	gcontext "github.com/gorilla/context"
 	"golang.org/x/net/context"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/triki.v0/internal/log"
 )
 
 // New returns a Context whose Value method returns values associated
@@ -53,22 +49,3 @@ func HTTPRequest(ctx context.Context) (*http.Request, bool) {
 	req, ok := ctx.Value(reqKey).(*http.Request)
 	return req, ok
 }
-
-// SessionType conveys information on a type of session to create.
-type SessionType int
-
-// Session Types
-const (
-	RegularSession SessionType = iota // session with standard consistency requirements
-	AdminSession                      // session with higher consistency requirements
-)
-
-var (
-	// DBSessionFromReq retrieves DB session associated with the request.
-	DBSessionFromReq func(r *http.Request) (*mgo.Session, *log.Error)
-	// DBSession retrieves DB session associated with the context.
-	DBSession func(c context.Context) (*mgo.Session, *log.Error)
-	// DBSaveSession creates a new DB session of a given type and associates it
-	// with the context. The session is typically closed by auth.Handler.
-	DBSaveSession func(context.Context, SessionType) *log.Error
-)

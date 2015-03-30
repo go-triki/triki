@@ -13,30 +13,16 @@ import (
 func Handler(fun func(context.Context, http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, cancel := context.WithTimeout(context.Background(), RequestTimeout)
-		cx := ctx.New(c, r)
 		defer cancel()
+		cx := ctx.New(c, r)
 		// close DB session (if the request handler created extra one)
-		defer func() {
-			s, _ := ctx.DBSessionFromReq(r)
-			if s != nil {
-				s.Close()
-			}
-		}()
+		defer DBCloseSessions(r)
+
+		// authenticate
 		tkn := r.Header.Get("X-AUTHENTICATION-TOKEN")
 		if tkn != "" {
-			if !bson.IsObjectIdHex(tkn) {
-				Error(w, http.StatusForbidden, statusInvalidToken,
-					"Invalid authentication token.")
-				return
-			}
-			tknID := bson.ObjectIdHex(tkn)
-			usrID, err := db.TokenCheck(tknID)
-			if err != nil {
-				Error(w, http.StatusForbidden, statusInvalidToken,
-					"Invalid authentication token.")
-				return
-			}
-			context.Set(r, contextKey, usrID)
+			//
+			//context.Set(r, contextKey, usrID)
 		}
 		// TODO authenticate...
 		fun(cx, w, r)

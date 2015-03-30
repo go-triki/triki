@@ -7,7 +7,7 @@ import (
 	"log"
 
 	"gopkg.in/mgo.v2"
-	"gopkg.in/triki.v0/internal/ctx"
+	"gopkg.in/triki.v0/internal/auth"
 	tlog "gopkg.in/triki.v0/internal/log"
 )
 
@@ -50,9 +50,7 @@ func Setup() {
 	adminSession.SetSafe(&mgo.Safe{WMode: "majority", FSync: true})
 
 	// install DB functions
-	ctx.DBSaveSession = SaveSession
-	ctx.DBSession = Session
-	ctx.DBSessionFromReq = SessionFromReq
+	auth.DBCloseSessions = CloseSessions
 	// setup collections
 	logSetup()
 	usersSetup()
