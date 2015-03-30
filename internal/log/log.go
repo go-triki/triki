@@ -21,11 +21,6 @@ func init() {
 	log.SetOutput(stderr)
 }
 
-type errkey int
-
-// ErrKey is a key to retreive error list from context.
-const errKey errkey = 0
-
 // Flush flushes StdLog to ensure all messages went through.
 func Flush() {
 	stderr.Flush()

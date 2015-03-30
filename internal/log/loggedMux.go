@@ -19,22 +19,22 @@ func (mux *LoggedMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	mux.Router.ServeHTTP(w, r)
 	elaps := time.Since(start)
-	errors := context.Get(r, errKey)
+	err := context.Get(r, errKey)
 	// log to DB
-	err := DBLog(map[string]interface{}{
+	dbErr := DBLog(map[string]interface{}{
 		"time":   start,
 		"elaps":  elaps,
 		"method": r.Method,
 		"url":    r.URL.Path,
-		"errors": errors,
+		"error":  err,
 	})
 	// std log
 	str := fmt.Sprintf("%s %s | start: %v elapsed: %v")
-	if err != nil {
+	if dbErr != nil {
 		str = fmt.Sprintf("%s | error logging to DB: %v", str, err)
 	}
-	if errors != nil {
-		str = fmt.Sprintf("%s | errors: %v", str, errors)
+	if err != nil {
+		str = fmt.Sprintf("%s | error: %v", str, err)
 	}
 	StdLog.Println(str)
 	context.Clear(r)

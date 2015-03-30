@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/net/context"
 	"gopkg.in/triki.v0/internal/ctx"
+	"gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/token"
 	"gopkg.in/triki.v0/internal/models/user"
 )
@@ -17,7 +18,7 @@ func Handler(fun func(context.Context, http.ResponseWriter, *http.Request)) http
 		c, cancel := context.WithTimeout(context.Background(), RequestTimeout)
 		defer cancel()
 		cx := ctx.New(c, r)
-		// close DB session (if the request handler created extra one)
+		// close DB sessions (in case the request handler created some)
 		defer DBCloseSessions(r)
 
 		// authenticate
@@ -25,22 +26,25 @@ func Handler(fun func(context.Context, http.ResponseWriter, *http.Request)) http
 		if tokn != "" {
 			tkn, err := token.Find(cx, []byte(tokn))
 			if err != nil {
-				// TODO
+				WriteErrorHandler(cx, w, r, err)
 				return
 			}
 			usr, err := user.GetByID(cx, tkn.UsrID)
 			if err != nil {
-				// TODO
+				WriteErrorHandler(cx, w, r, err)
 				return
 			}
 			if !usr.IsActive() {
-				// TODO
+				WriteErrorHandler(cx, w, r, log.UserNotActiveErr)
 				return
 			}
-			//
-			//context.Set(r, contextKey, usrID)
+			ath := T{
+				Usr: usr,
+				Tkn: tkn,
+			}
+			Set(cx, &ath)
+			// TODO record in log that user logged in
 		}
-		// TODO authenticate...
 		fun(cx, w, r)
 	}
 }

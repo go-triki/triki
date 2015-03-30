@@ -15,7 +15,7 @@ func UserSignup(cx context.Context, login, pass string) *log.Error {
 	if err != nil {
 		return log.InternalServerErr(err)
 	} else if is {
-		return log.BadSignupDetailsErr(fmt.Sprintf("User `%s` already exists", login))
+		return log.BadSignupDetailsErr(fmt.Sprintf("user `%s` already exists", login))
 	}
 	usr := user.T{
 		Usr:  login,

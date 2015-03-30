@@ -3,13 +3,23 @@ package log
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/gorilla/context"
+	golangctx "golang.org/x/net/context"
+	"gopkg.in/triki.v0/internal/ctx"
 )
+
+type errkey int
+
+// errKey - a key to retreive errors. from context.
+const errKey errkey = 0
 
 type trikiCode int
 
 // triki codec (TCs)
 const (
 	incorrectPassTC    trikiCode = 100
+	userNotActiveTC    trikiCode = 150
 	badSignupDetailsTC trikiCode = 200
 	badTokenTC         trikiCode = 250
 	dbNotFoundTC       trikiCode = 300
@@ -24,6 +34,16 @@ type Error struct {
 
 func (err Error) Error() string {
 	return err.What
+}
+
+// Set associates err with the context cx so that it can be later retreived
+// for logging purposes.
+func Set(cx golangctx.Context, err *Error) {
+	req, _ := ctx.HTTPRequest(cx)
+	if req == nil {
+		return
+	}
+	context.Set(req, errKey, err)
 }
 
 // InternalServerErr returns an error indicating some unexpected condition
@@ -60,4 +80,7 @@ var (
 	// BadTokenErr is returned when the token supplied by the user
 	// is expired/invalid/not in the DB.
 	BadTokenErr = &Error{"bad authorization token", badTokenTC, 0}
+	// UserNotActiveErr indicates that user account is not in the "active" state
+	// and the user cannot log in.
+	UserNotActiveErr = &Error{"this user account is not active", userNotActiveTC, 0}
 )
