@@ -3,7 +3,7 @@
 // github.com/gorilla/context package.
 //
 // Original at https://blog.golang.org/context/gorilla/gorilla.go
-package ctx
+package ctx // import "gopkg.in/triki.v0/internal/ctx"
 
 import (
 	"net/http"

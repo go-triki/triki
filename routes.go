@@ -19,6 +19,7 @@ func authH(handler http.HandlerFunc) http.HandlerFunc {
 
 // routeAPI associates http handlers with corresponding URLs.
 func routeAPI(r *mux.Router) {
+	//r.NotFoundHandler
 	r.HandleFunc(authPath, wwwapi.AuthPostHandler).Methods("POST")
 	r.HandleFunc(authPath+"/signup", wwwapi.AuthSignupPostHandler).Methods("POST")
 

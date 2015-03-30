@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	apiPrefix = "/api/"
+	apiPrefix = "/api"
 )
 
 var (
