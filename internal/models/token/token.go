@@ -11,33 +11,65 @@ import (
 	"gopkg.in/triki.v0/internal/rands"
 )
 
+// Options set by conf.
+var (
+	// MaxExpireAfter controls how long (at most) authentication tokens are valid.
+	MaxExpireAfter time.Duration
+)
+
+// Set by DB driver.
 var (
 	// DBFind finds given token in the DB.
-	DBFind func(cx context.Context, tknID []byte) (*T, *log.Error)
+	DBFind func(cx context.Context, token []byte) (*T, *log.Error)
+	// DBExists checks if given token is in the DB.
+	DBExists func(cx context.Context, token []byte) (bool, *log.Error)
 	// DBInsert inserts token tkn into the DB.
 	DBInsert func(cx context.Context, tkn *T) *log.Error
 )
 
 // T type (token.T) holds information associated with a given authentication token
 type T struct {
-	Tkn   []byte        `bson:"_id"   json:"tkn"`
-	Birth time.Time     `bson:"birth" json:"-"`
-	UsrID bson.ObjectId `bson:"usrID" json:"usrID"`
+	Tkn         []byte        `bson:"_id"          json:"tkn"`
+	Birth       time.Time     `bson:"birth"        json:"-"`
+	UsrID       bson.ObjectId `bson:"usrID"        json:"usrID"`
+	ExpireAfter time.Duration `bson:"expire_after" json:""`
 	// TODO add last used array with info
 }
 
 // New creates new token for user usrID (and saves it in the DB).
 //
-// Returns token and error message.
-func New(cx context.Context, usrID bson.ObjectId) (tkn *T, err *log.Error) {
-	var token T
-	token.Tkn = rands.New(30)
-	token.Birth = time.Now()
-	token.UsrID = usrID
-	// TODO add info about request
-	err = DBInsert(cx, &token)
+// At least tkn.UsrID needs to be set.
+func New(cx context.Context, tkn *T) *log.Error {
+	tkn.Tkn = rands.New(30)
+	tkn.Birth = time.Now()
+	if tkn.ExpireAfter == 0 {
+		tkn.ExpireAfter = MaxExpireAfter
+	}
+	// TODO add info (from cx) about request
+	err := DBInsert(cx, tkn)
 	if err != nil {
+		return err
+	}
+	return err
+}
+
+// Find finds given token in the DB.
+func Find(cx context.Context, token []byte) (*T, *log.Error) {
+	tkn, err := DBFind(cx, token)
+	if err != nil {
+		is, er := DBExists(cx, token)
+		if is { // token in the DB but there was an error retrieving it
+			return nil, err
+		} else if er != nil { // there's no such token in the DB
+			return nil, log.BadTokenErr
+		} else { // error checking if token exists
+			return nil, err // return original error
+		}
 		return nil, err
 	}
-	return &token, err
+	if time.Now().After(tkn.Birth.Add(tkn.ExpireAfter)) {
+		// token expired
+		return nil, log.BadTokenErr
+	}
+	return tkn, nil
 }

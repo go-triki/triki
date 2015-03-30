@@ -7,9 +7,11 @@ import (
 
 type trikiCode int
 
+// triki codec (TCs)
 const (
 	incorrectPassTC    trikiCode = 100
 	badSignupDetailsTC trikiCode = 200
+	badTokenTC         trikiCode = 250
 	dbNotFoundTC       trikiCode = 300
 )
 
@@ -55,4 +57,7 @@ var (
 	// IncorrectPassErr is returned when the password supplied by the user
 	// doesn't match the one recorded in the DB.
 	IncorrectPassErr = &Error{"incorrect password", incorrectPassTC, 0}
+	// BadTokenErr is returned when the token supplied by the user
+	// is expired/invalid/not in the DB.
+	BadTokenErr = &Error{"bad authorization token", badTokenTC, 0}
 )

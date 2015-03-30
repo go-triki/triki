@@ -19,6 +19,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/triki.v0/internal/auth"
 	"gopkg.in/triki.v0/internal/db/mongodrv"
+	"gopkg.in/triki.v0/internal/models/token"
 	"gopkg.in/triki.v0/internal/models/user"
 )
 
@@ -50,15 +51,27 @@ func init() {
 	flag.BoolVar(&optShowConf, "show_config", false, "print currently loaded configuration and exit")
 	flag.BoolVar(&optMoreHelp, "more_help", false, "print help for more triki options")
 	flag.StringVar(&optConfFile, "config", "", "`path` to a TOML configuration file")
-	config.StringVar(&user.PassSalt, "pass_salt", "", "used to `salt` passwords in the DB")
-	config.IntVar(&optNumCpus, "num_cpus", 0, "number of CPUs to use, 0 to autodetect")
+
+	config.StringVar(&user.PassSalt, "pass_salt",
+		"", "used to `salt` passwords in the DB")
+	config.IntVar(&optNumCpus, "num_cpus",
+		0, "number of CPUs to use, 0 to autodetect")
+
+	// triki config
+	config.DurationVar(&token.MaxExpireAfter, "triki.tkn_max_expire_after",
+		7*24*time.Hour, "maximum time a user authorization token is valid")
 
 	// server config
-	config.StringVar(&optServRoot, "server.root", "./www", "directory with static files to serve")
-	config.StringVar(&server.Addr, "server.addr", "localhost:8765", "address and port to serve on")
-	config.DurationVar(&auth.RequestTimeout, "server.request_timeout", 3*time.Second, "(weak) time limit for HTTP request processing")
+	config.StringVar(&optServRoot, "server.root",
+		"./www", "directory with static files to serve")
+	config.StringVar(&server.Addr, "server.addr",
+		"localhost:8765", "address and port to serve on")
+	config.DurationVar(&auth.RequestTimeout, "server.request_timeout",
+		3*time.Second, "(weak) time limit for HTTP request processing")
 
 	// mongo config
+	config.IntVar(&mongo.MaxLogSize, "mongo.max_log_size",
+		1e10, "maximum size (in bytes) of the log database")
 	config.StringVar(&optMongoAddrs, "mongo.Addrs",
 		"localhost:27017", "MongoDB server to connect to, format: host1[:port1][,host2[:port2],...]")
 	config.BoolVar(&optMongoSSL, "mongo.SSL",

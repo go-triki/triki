@@ -23,14 +23,25 @@ var (
 	DBExists func(cx context.Context, login string) (exists bool, err *log.Error)
 )
 
+// StatusT is user's status
+type StatusT int
+
+// Possible user statuses
+const (
+	SActive StatusT = iota
+	SDeleted
+	SSuspended
+)
+
 // T type (user.T) stores user information (e.g. for authentication), also for MongoDB and JSON.
 type T struct {
-	ID       bson.ObjectId `json:"id"             bson:"_id"`   // unique ID
-	Usr      string        `json:"usr"            bson:"usr"`   // login/email
-	Pass     string        `json:"pass,omitempty" bson:"-"`     // password (from www)
-	PassHash []byte        `json:"-"              bson:"pass"`  // password hash (from DB)
-	Salt     []byte        `json:"-"              bson:"salt"`  // individual password salt (from DB)
-	Nick     string        `json:"nick"           bson:"nick "` // user's nick
+	ID       bson.ObjectId `json:"id"             bson:"_id"`    // unique ID
+	Usr      string        `json:"usr"            bson:"usr"`    // login/email
+	Pass     string        `json:"pass,omitempty" bson:"-"`      // password (from www)
+	PassHash []byte        `json:"-"              bson:"pass"`   // password hash (from DB)
+	Salt     []byte        `json:"-"              bson:"salt"`   // individual password salt (from DB)
+	Nick     string        `json:"nick"           bson:"nick "`  // user's nick
+	Status   StatusT       `json:"-"              bson:"status"` // user's status (active, deleted, etc.)
 	// TODO add list of failed logins
 }
 
@@ -53,4 +64,9 @@ func New(cx context.Context, usr *T) *log.Error {
 	}
 	usr.ID = bson.NewObjectId()
 	return DBInsert(cx, usr)
+}
+
+// IsActive returns true if user account is active and the user can log in.
+func (usr *T) IsActive() bool {
+	return usr.Status == SActive
 }

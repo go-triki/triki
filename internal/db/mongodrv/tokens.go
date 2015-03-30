@@ -40,6 +40,19 @@ func TokenFind(cx context.Context, tknID []byte) (*token.T, *log.Error) {
 	return &token, nil
 }
 
+// TokenExists checks if a token exists in the DB.
+func TokenExists(cx context.Context, token []byte) (bool, *log.Error) {
+	col, er := tokensC(cx)
+	if er != nil {
+		return false, er
+	}
+	n, err := col.FindId(token).Count()
+	if err != nil {
+		return false, log.InternalServerErr(err)
+	}
+	return n >= 1, nil
+}
+
 // TokenInsert inserts the token into the DB.
 func TokenInsert(cx context.Context, tkn *token.T) *log.Error {
 	col, er := tokensC(cx)

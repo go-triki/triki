@@ -21,6 +21,8 @@ const (
 var (
 	// DialInfo used to connect MongoBD.
 	DialInfo = mgo.DialInfo{}
+	// MaxLogSize is maximum size (in bytes) of the log DB.
+	MaxLogSize int
 )
 
 var (

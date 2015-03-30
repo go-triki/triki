@@ -11,21 +11,24 @@ import (
 
 func logSetup() {
 	c := adminSession.DB("").C(logCName)
-	c.Create(&mgo.CollectionInfo{
+	err := c.Create(&mgo.CollectionInfo{
 		Capped:   true,
-		MaxBytes: 1e6,
+		MaxBytes: MaxLogSize,
 	})
-	index := mgo.Index{
-		Key:        []string{"time"},
-		Unique:     false,
-		DropDups:   false,
-		Background: false,
-		Sparse:     false,
-	}
-	err := c.EnsureIndex(index)
 	if err != nil {
-		log.Fatalf("MongoDB ensureIndex `time` on log failed: %s.\n", err.Error())
+		log.Fatalf("MongoDB create collection `%s` failed: %s", logCName, err.Error())
 	}
+	//	index := mgo.Index{
+	//		Key:        []string{"time"},
+	//		Unique:     false,
+	//		DropDups:   false,
+	//		Background: false,
+	//		Sparse:     false,
+	//	}
+	//	err = c.EnsureIndex(index)
+	//	if err != nil {
+	//		log.Fatalf("MongoDB ensureIndex `time` on log failed: %s.\n", err.Error())
+	//	}
 	// install DB functions
 	tlog.DBLog = Log
 }
@@ -58,7 +61,7 @@ func tokensSetup() {
 		DropDups:    false,
 		Background:  false,
 		Sparse:      false,
-		ExpireAfter: tokensExpireAfter,
+		ExpireAfter: token.MaxExpireAfter,
 	}
 	if err := c.EnsureIndex(index); err != nil {
 		log.Fatalf("MongoDB ensureIndex `birth` on tokens failed: %s.\n", err)
@@ -75,5 +78,6 @@ func tokensSetup() {
 	}
 	// install DB functions
 	token.DBFind = TokenFind
+	token.DBExists = TokenExists
 	token.DBInsert = TokenInsert
 }
