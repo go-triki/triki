@@ -6,9 +6,7 @@ package mongo // import "gopkg.in/triki.v0/internal/db/mongodrv"
 import (
 	"log"
 
-	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/triki.v0/internal/auth"
 	"gopkg.in/triki.v0/internal/ctx"
 	tlog "gopkg.in/triki.v0/internal/log"
 )
@@ -50,8 +48,9 @@ func Setup() {
 	adminSession.SetSafe(&mgo.Safe{WMode: "majority", FSync: true})
 
 	// install DB functions
-	auth.DBNewSession = NewSession
-	auth.DBNewAuthSession = NewAuthSession
+	ctx.DBSaveSession = SaveSession
+	ctx.DBSession = Session
+	ctx.DBSessionFromReq = SessionFromReq
 	// setup collections
 	logSetup()
 	usersSetup()
@@ -65,17 +64,4 @@ func Cleanup() {
 	session.Close()
 	logSession.Close()
 	log.Println("Database connections closed.")
-}
-
-// NewSession creates new ordinary session with the DB and stores it with the context.
-func NewSession(cx context.Context) *tlog.Error {
-	sess := session.Copy()
-	return ctx.SetDBSession(cx, sess)
-}
-
-// NewAuthSession creates new administrative (with higher consistency) session
-// with the DB and stores it with the context.
-func NewAuthSession(cx context.Context) *tlog.Error {
-	sess := session.Copy()
-	return ctx.SetDBSession(cx, sess)
 }

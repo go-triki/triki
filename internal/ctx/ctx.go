@@ -8,8 +8,6 @@
 package ctx
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	gcontext "github.com/gorilla/context"
@@ -32,10 +30,7 @@ type wrapper struct {
 
 type key int
 
-const (
-	reqKey  key = 0
-	sessKey key = 1
-)
+const reqKey key = 0
 
 // Value returns Gorilla's context package's value for this Context's request
 // and key. It delegates to the parent Context if there is no such value.
@@ -59,38 +54,21 @@ func HTTPRequest(ctx context.Context) (*http.Request, bool) {
 	return req, ok
 }
 
-// DBSessionFromReq retrieves mongo session associated with the request.
-func DBSessionFromReq(r *http.Request) (*mgo.Session, *log.Error) {
-	sess, ok := gcontext.GetOk(r, sessKey)
-	if !ok {
-		return nil, log.InternalServerErr(
-			fmt.Errorf("couldn't find session associated with request %v", *r))
-	}
-	s, ok := sess.(*mgo.Session)
-	if !ok {
-		return nil, log.InternalServerErr(fmt.Errorf(
-			"couldn't find session (type mismatch) associated with request %v", *r))
-	}
-	return s, nil
-}
+// SessionType conveys information on a type of session to create.
+type SessionType int
 
-// DBSession retrieves mongo session associated with the context.
-func DBSession(c context.Context) (*mgo.Session, *log.Error) {
-	req, ok := HTTPRequest(c)
-	if !ok {
-		return nil, log.InternalServerErr(errors.New(
-			"couldn't find request associated with context"))
-	}
-	return DBSessionFromReq(req)
-}
+// Session Types
+const (
+	RegularSession SessionType = iota // session with standard consistency requirements
+	AdminSession                      // session with higher consistency requirements
+)
 
-// SetDBSession saves mongo session associated with the context.
-func SetDBSession(c context.Context, sess *mgo.Session) *log.Error {
-	req, ok := HTTPRequest(c)
-	if !ok {
-		return log.InternalServerErr(errors.New(
-			"couldn't associate *mgo.Session with a context.Context"))
-	}
-	gcontext.Set(req, sessKey, sess)
-	return nil
-}
+var (
+	// DBSessionFromReq retrieves DB session associated with the request.
+	DBSessionFromReq func(r *http.Request) (*mgo.Session, *log.Error)
+	// DBSession retrieves DB session associated with the context.
+	DBSession func(c context.Context) (*mgo.Session, *log.Error)
+	// DBSaveSession creates a new DB session of a given type and associates it
+	// with the context. The session is typically closed by auth.Handler.
+	DBSaveSession func(context.Context, SessionType) *log.Error
+)
