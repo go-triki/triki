@@ -2,6 +2,8 @@
 package user // import "gopkg.in/triki.v0/internal/models/user"
 
 import (
+	"strings"
+
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/triki.v0/internal/log"
@@ -17,6 +19,8 @@ var (
 var (
 	// DBFind searches the DB for user with login/email == usr.
 	DBFind func(cx context.Context, login string) (usr *T, err *log.Error)
+	// DBFindByID finds user with a given _id.
+	DBFindByID func(cx context.Context, id bson.ObjectId) (*T, *log.Error)
 	// DBInsert inserts user usr into the DB.
 	DBInsert func(cx context.Context, usr *T) *log.Error
 	// DBExists checks if user with login/email == usr exists in the DB.
@@ -36,7 +40,7 @@ const (
 // T type (user.T) stores user information (e.g. for authentication), also for MongoDB and JSON.
 type T struct {
 	ID       bson.ObjectId `json:"id"             bson:"_id"`    // unique ID
-	Usr      string        `json:"usr"            bson:"usr"`    // login/email
+	Usr      string        `json:"usr"            bson:"usr"`    // login/email (unique)
 	Pass     string        `json:"pass,omitempty" bson:"-"`      // password (from www)
 	PassHash []byte        `json:"-"              bson:"pass"`   // password hash (from DB)
 	Salt     []byte        `json:"-"              bson:"salt"`   // individual password salt (from DB)
@@ -52,7 +56,11 @@ type T struct {
 // are sanitized (usr struct is updated accordingly).
 func New(cx context.Context, usr *T) *log.Error {
 	if usr.Nick == "" {
-		usr.Nick = usr.Usr
+		at := strings.Index(usr.Usr, "@")
+		if at == -1 {
+			at = len(usr.Usr)
+		}
+		usr.Nick = usr.Usr[0:at]
 	}
 	err := usr.checkPass()
 	if err != nil {
@@ -64,6 +72,11 @@ func New(cx context.Context, usr *T) *log.Error {
 	}
 	usr.ID = bson.NewObjectId()
 	return DBInsert(cx, usr)
+}
+
+// GetByID retrieves user of a given ID from the DB
+func GetByID(cx context.Context, id bson.ObjectId) (*T, *log.Error) {
+	return DBFindByID(cx, id)
 }
 
 // IsActive returns true if user account is active and the user can log in.

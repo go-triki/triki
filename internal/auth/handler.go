@@ -5,6 +5,8 @@ import (
 
 	"golang.org/x/net/context"
 	"gopkg.in/triki.v0/internal/ctx"
+	"gopkg.in/triki.v0/internal/models/token"
+	"gopkg.in/triki.v0/internal/models/user"
 )
 
 // Handler wraps handlers with context, session and authentication.
@@ -19,8 +21,22 @@ func Handler(fun func(context.Context, http.ResponseWriter, *http.Request)) http
 		defer DBCloseSessions(r)
 
 		// authenticate
-		tkn := r.Header.Get("X-AUTHENTICATION-TOKEN")
-		if tkn != "" {
+		tokn := r.Header.Get("X-AUTHENTICATION-TOKEN")
+		if tokn != "" {
+			tkn, err := token.Find(cx, []byte(tokn))
+			if err != nil {
+				// TODO
+				return
+			}
+			usr, err := user.GetByID(cx, tkn.UsrID)
+			if err != nil {
+				// TODO
+				return
+			}
+			if !usr.IsActive() {
+				// TODO
+				return
+			}
 			//
 			//context.Set(r, contextKey, usrID)
 		}

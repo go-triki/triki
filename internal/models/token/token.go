@@ -20,9 +20,9 @@ var (
 // Set by DB driver.
 var (
 	// DBFind finds given token in the DB.
-	DBFind func(cx context.Context, token []byte) (*T, *log.Error)
+	DBFind func(cx context.Context, tokn []byte) (*T, *log.Error)
 	// DBExists checks if given token is in the DB.
-	DBExists func(cx context.Context, token []byte) (bool, *log.Error)
+	DBExists func(cx context.Context, tokn []byte) (bool, *log.Error)
 	// DBInsert inserts token tkn into the DB.
 	DBInsert func(cx context.Context, tkn *T) *log.Error
 )
@@ -54,10 +54,10 @@ func New(cx context.Context, tkn *T) *log.Error {
 }
 
 // Find finds given token in the DB.
-func Find(cx context.Context, token []byte) (*T, *log.Error) {
-	tkn, err := DBFind(cx, token)
+func Find(cx context.Context, tokn []byte) (*T, *log.Error) {
+	tkn, err := DBFind(cx, tokn)
 	if err != nil {
-		is, er := DBExists(cx, token)
+		is, er := DBExists(cx, tokn)
 		if is { // token in the DB but there was an error retrieving it
 			return nil, err
 		} else if er != nil { // there's no such token in the DB

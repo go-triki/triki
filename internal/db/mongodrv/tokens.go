@@ -27,16 +27,16 @@ func tokensC(cx context.Context) (*mgo.Collection, *log.Error) {
 
 // TokenFind finds given token in the DB.
 func TokenFind(cx context.Context, tknID []byte) (*token.T, *log.Error) {
-	var token token.T
+	var tkn token.T
 	col, er := tokensC(cx)
 	if er != nil {
 		return nil, er
 	}
-	err := col.Find(bson.M{"_id": tknID}).One(&token)
+	err := col.Find(bson.M{"_id": tknID}).One(&tkn)
 	if err != nil {
 		return nil, log.InternalServerErr(err)
 	}
-	return &token, nil
+	return &tkn, nil
 }
 
 // TokenExists checks if a token exists in the DB.

@@ -10,8 +10,8 @@ import (
 
 // Authenticate checks if the given credentials can be authenticated.
 // Returns (user, token, error).
-func Authenticate(cx context.Context, usrID, pass string) (*user.T, *token.T, *log.Error) {
-	usr, err := user.DBFind(cx, usrID)
+func Authenticate(cx context.Context, login, pass string) (*user.T, *token.T, *log.Error) {
+	usr, err := user.DBFind(cx, login)
 	if err != nil {
 		return nil, nil, err
 	}

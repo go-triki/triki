@@ -49,6 +49,7 @@ func usersSetup() {
 	}
 	// install DB functions
 	user.DBFind = UserFind
+	user.DBFindByID = UserFindByID
 	user.DBInsert = UserInsert
 	user.DBExists = UserExists
 }
