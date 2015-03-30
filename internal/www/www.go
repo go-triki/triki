@@ -1,7 +1,7 @@
 /*
-Package wwwapi supplies handlers for gotriki www api.
+Package www supplies http handlers for gotriki www api.
 */
-package wwwapi
+package www // import "gopkg.in/triki.v0/internal/www"
 
 import (
 	"bytes"

@@ -1,4 +1,4 @@
-package wwwapi
+package www
 
 import (
 	"bytes"

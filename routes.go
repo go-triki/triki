@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/triki.v0/internal/wwwapi"
+	"gopkg.in/triki.v0/internal/www"
 )
 
 const (
