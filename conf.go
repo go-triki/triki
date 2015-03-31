@@ -84,9 +84,9 @@ func init() {
 		5*time.Second, "timeout for connecting to MongoDB instance (must be >=0)")
 	config.StringVar(&mongo.DialInfo.Database, "mongo.Database",
 		"triki", "MongoDB database with triki data")
-	config.String(&mongo.DialInfo.Username, "mongo.Usr",
+	config.StringVar(&mongo.DialInfo.Username, "mongo.Usr",
 		"triki", "username for authentication to MongoDB")
-	config.String(&mongo.DialInfo.Password, "mongo.Pass",
+	config.StringVar(&mongo.DialInfo.Password, "mongo.Pass",
 		"triki", "password for authentication to MongoDB")
 	////////////////////////////////////////////////////////////////////////////
 	// parse flags
@@ -117,11 +117,11 @@ func init() {
 	}
 	runtime.GOMAXPROCS(optNumCpus)
 	//server config
-	mongo.DialInfo.Addrs = strings.Split(*optMongoAddrss, ",")
+	mongo.DialInfo.Addrs = strings.Split(optMongoAddrs, ",")
 	// mongo config
-	if *optMongoSSL {
+	if optMongoSSL {
 		mongo.DialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-			conn, err := tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: *optMongoSSLInsecure})
+			conn, err := tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: optMongoSSLInsecure})
 			if err != nil {
 				log.Printf("MongoDB TLS connection error: %s.\n", err.Error())
 			}

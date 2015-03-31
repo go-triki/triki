@@ -16,20 +16,25 @@ const errKey errkey = 0
 
 type trikiCode int
 
-// triki codec (TCs)
+// triki codes (TCs), for errors >0
 const (
-	incorrectPassTC    trikiCode = 100
-	userNotActiveTC    trikiCode = 150
-	badSignupDetailsTC trikiCode = 200
-	badTokenTC         trikiCode = 250
-	dbNotFoundTC       trikiCode = 300
+	incorrectPassTC        trikiCode = 100
+	userNotActiveTC        trikiCode = 150
+	badSignupDetailsTC     trikiCode = 200
+	badTokenTC             trikiCode = 250
+	dbNotFoundTC           trikiCode = 300
+	internalServerErrTC    trikiCode = 400
+	failedWritingReplyTC   trikiCode = 420
+	failedReadingRequestTC trikiCode = 460
+	invalidIDTC            trikiCode = 500
 )
 
 // Error instances represent error encountered while serving www requests.
 type Error struct {
-	What       string    // human-readable decription of the error
-	TrikiCode  trikiCode // error code passed to triki web interface
-	HTTPStatus int       // HTTP status of the reply (0 - don't modify)
+	What       string        // human-readable decription of the error
+	TrikiCode  trikiCode     // error code passed to triki web interface
+	HTTPStatus int           // HTTP status of the reply (0 - don't modify)
+	Info       []interface{} // additional info
 }
 
 func (err Error) Error() string {
@@ -51,6 +56,7 @@ func Set(cx golangctx.Context, err *Error) {
 func InternalServerErr(err error) *Error {
 	return &Error{
 		What:       fmt.Sprintf("internal server error: %s", err.Error()),
+		TrikiCode:  internalServerErrTC,
 		HTTPStatus: http.StatusInternalServerError,
 	}
 }
@@ -73,14 +79,33 @@ func DBNotFoundErr(err error) *Error {
 	}
 }
 
+// FailedWritingReplyErr error is returned when writing to http.ResponseWriter failed.
+func FailedWritingReplyErr(err error) *Error {
+	return &Error{
+		What:      err.Error(),
+		TrikiCode: failedWritingReplyTC,
+	}
+}
+
+// FailedReadingRequestErr error is returned when reading from http.Request failed.
+func FailedReadingRequestErr(err error) *Error {
+	return &Error{
+		What:      err.Error(),
+		TrikiCode: failedReadingRequestTC,
+	}
+}
+
 var (
 	// IncorrectPassErr is returned when the password supplied by the user
 	// doesn't match the one recorded in the DB.
-	IncorrectPassErr = &Error{"incorrect password", incorrectPassTC, 0}
+	IncorrectPassErr = &Error{What: "incorrect password", TrikiCode: incorrectPassTC}
 	// BadTokenErr is returned when the token supplied by the user
 	// is expired/invalid/not in the DB.
-	BadTokenErr = &Error{"bad authorization token", badTokenTC, 0}
+	BadTokenErr = &Error{What: "bad authorization token", TrikiCode: badTokenTC}
 	// UserNotActiveErr indicates that user account is not in the "active" state
 	// and the user cannot log in.
-	UserNotActiveErr = &Error{"this user account is not active", userNotActiveTC, 0}
+	UserNotActiveErr = &Error{What: "this user account is not active", TrikiCode: userNotActiveTC}
+	// InvalidIDErr is returned when ID (of a user, article, etc.) supplied in
+	// http.Request is not a valid ID.
+	InvalidIDErr = &Error{What: "requested ID is invalid", TrikiCode: invalidIDTC}
 )

@@ -4,24 +4,22 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/net/context"
+	"gopkg.in/triki.v0/internal/auth"
 	"gopkg.in/triki.v0/internal/www"
 )
 
-const (
-	authPath = "/auth"
-)
-
-// authH wraps handler with wwwapi.AuthenticateHandler.
-// Just for convenience (short name).
-func authH(handler http.HandlerFunc) http.HandlerFunc {
-	return wwwapi.AuthenticateHandler(handler)
-}
-
 // routeAPI associates http handlers with corresponding URLs.
 func routeAPI(r *mux.Router) {
-	//r.NotFoundHandler
-	r.HandleFunc(authPath, wwwapi.AuthPostHandler).Methods("POST")
-	r.HandleFunc(authPath+"/signup", wwwapi.AuthSignupPostHandler).Methods("POST")
+	// TODO r.NotFoundHandler
+	add := func(path string, h func(context.Context, http.ResponseWriter, *http.Request)) *mux.Route {
+		return r.HandleFunc(path, auth.Handler(h))
+	}
 
-	r.HandleFunc("/accounts/{account_id}", authH(wwwapi.AccountsIDGetHandler)).Methods("GET")
+	// auth
+	add("/auth/login", www.AuthLoginPost).Methods("POST")
+	add("/auth/signup", www.AuthSignupPost).Methods("POST")
+
+	// users
+	add("/users/{user_id}", www.UsersIDGet).Methods("GET")
 }

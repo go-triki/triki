@@ -14,10 +14,6 @@ import (
 	"gopkg.in/triki.v0/internal/log"
 )
 
-const (
-	apiPrefix = "/api"
-)
-
 var (
 	server = nserv.Server{}
 )
@@ -32,7 +28,7 @@ func main() {
 	// redirect "stop" signals to server.Stop
 	go func() {
 		<-signals
-		log.StdLog.Infoln("Caught signal. Exiting (waiting for open connections to termiate).")
+		log.StdLog.Println("Caught signal. Exiting (waiting for open connections to termiate).")
 		server.Stop()
 	}()
 
@@ -45,19 +41,19 @@ func main() {
 	r.KeepContext = true
 
 	// setup API routing
-	apiRouter := r.PathPrefix(apiPrefix).Subrouter()
+	apiRouter := r.PathPrefix("/api").Subrouter()
 	routeAPI(apiRouter)
 
 	// serve static content from "/"
-	r.PathPrefix(staticPrefix).Handler(http.FileServer(http.Dir(optServRoot)))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(optServRoot)))
 
 	// start server
-	log.StdLog.Infof("Serving triki via www: http://%s\n", server.Addr)
+	log.StdLog.Printf("Serving triki via www: http://%s\n", server.Addr)
 	server.Handler = &log.LoggedMux{r}
 	if err := server.ListenAndServe(); err != nil {
 		log.StdLog.Println(err)
 		return
 	}
-	log.StdLog.Infoln("Exiting gracefully, please wait...")
+	log.StdLog.Println("Exiting gracefully, please wait...")
 	server.Wait()
 }
