@@ -7,7 +7,6 @@ package main
 
 import (
 	"crypto/tls"
-	"flag"
 	"log"
 	"net"
 	"os"
@@ -19,6 +18,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/triki.v0/internal/auth"
 	"gopkg.in/triki.v0/internal/db/mongodrv"
+	tlog "gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/token"
 	"gopkg.in/triki.v0/internal/models/user"
 )
@@ -26,7 +26,6 @@ import (
 // general config
 var (
 	optShowConf bool
-	optMoreHelp bool
 	optConfFile string
 	optNumCpus  int
 )
@@ -46,11 +45,12 @@ var (
 
 // init parses command line flags and config files.
 func init() {
+	// get logger without  buffering (internal/log switches default log logger)
+	logger := log.New(os.Stderr, "triki:", log.LstdFlags)
 	//config.CommandLine = &config.Set{flag.CommandLine}
 	// general config
-	flag.BoolVar(&optShowConf, "show_config", false, "print currently loaded configuration and exit")
-	flag.BoolVar(&optMoreHelp, "more_help", false, "print help for more triki options")
-	flag.StringVar(&optConfFile, "config", "", "`path` to a TOML configuration file")
+	config.BoolVar(&optShowConf, "show_config", false, "print currently loaded configuration and exit")
+	config.StringVar(&optConfFile, "config", "", "`path` to a TOML configuration file")
 
 	config.StringVar(&user.PassSalt, "pass_salt",
 		"", "used to `salt` passwords in the DB")
@@ -90,18 +90,13 @@ func init() {
 		"triki", "password for authentication to MongoDB")
 	////////////////////////////////////////////////////////////////////////////
 	// parse flags
-	flag.Parse()
-	if optMoreHelp {
-		config.CommandLine.PrintDefaults()
-		os.Exit(0)
-	}
+	config.ParseArgs()
 	// parse config file
 	if optConfFile != "" {
 		if err := config.Parse(optConfFile); err != nil {
-			log.Fatalf("Error reading config file `%s`:\n%v", optConfFile, err)
+			logger.Fatalf("Error reading config file `%s`:\n%v", optConfFile, err)
 		}
 	}
-	config.ParseArgs()
 	// write out option values?
 	if optShowConf {
 		config.PrintCurrentValues()
@@ -110,7 +105,7 @@ func init() {
 	////////////////////////////////////////////////////////////////////////////
 	// general config
 	if user.PassSalt == "" {
-		log.Fatalln("Error: `pass_salt` option can't be empty. Best practice is to set it to some random string.")
+		logger.Fatalln("Error: `pass_salt` option can't be empty. Best practice is to set it to some random string.")
 	}
 	if optNumCpus == 0 {
 		optNumCpus = runtime.NumCPU()
@@ -123,13 +118,14 @@ func init() {
 		mongo.DialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 			conn, err := tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: optMongoSSLInsecure})
 			if err != nil {
-				log.Printf("MongoDB TLS connection error: %s.\n", err.Error())
+				tlog.StdLog.Printf("MongoDB TLS connection error: %s.\n", err.Error())
+				tlog.Flush()
 			}
 			return conn, err
 		}
 	}
 
 	if mongo.DialInfo.Timeout < 0 {
-		log.Fatalln("MongoDB dial timeout `mongo.DialTimeout` must be nonnegative.")
+		logger.Fatalln("MongoDB dial timeout `mongo.DialTimeout` must be nonnegative.")
 	}
 }

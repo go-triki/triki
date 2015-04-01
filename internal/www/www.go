@@ -5,9 +5,7 @@ package www // import "gopkg.in/triki.v0/internal/www"
 
 import (
 	"encoding/json"
-	"math/rand"
 	"net/http"
-	"time"
 
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
@@ -19,9 +17,13 @@ const (
 	applicationJSONType = "application/json"
 )
 
-func init() {
-	// initialize random number generator
-	rand.Seed(time.Now().UTC().UnixNano())
+// writeError records error in the context (for logging) and sends it to the client
+// via http.ResponseWriter.
+func writeError(cx context.Context, w http.ResponseWriter, err *log.Error) {
+	log.Set(cx, log.FailedReadingRequestErr(err))
+	writeJSON(cx, w, Resp{
+		Errors: []*log.Error{err},
+	})
 }
 
 // writeJSON writes JSON representation of v to the http response w.
@@ -35,6 +37,7 @@ func writeJSON(cx context.Context, w http.ResponseWriter, v interface{}) *log.Er
 	return nil
 }
 
+// readID converts a string representing an ID into bson.ObjectId
 func readID(str string) (bson.ObjectId, *log.Error) {
 	if !bson.IsObjectIdHex(str) {
 		return "", log.InvalidIDErr
