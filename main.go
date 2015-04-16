@@ -5,6 +5,7 @@ package main // import "gopkg.in/triki.v0"
 
 import (
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"os/signal"
 
@@ -44,9 +45,13 @@ func main() {
 	apiRouter := r.PathPrefix("/api").Subrouter()
 	routeAPI(apiRouter)
 
-	// serve static content from "/"
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir(optServRoot)))
-
+	if staticServerURL == nil {
+		// serve static content from "/"
+		r.PathPrefix("/").Handler(http.FileServer(http.Dir(optServRoot)))
+	} else {
+		// serve static content from staticServerURL
+		r.PathPrefix("/").Handler(httputil.NewSingleHostReverseProxy(staticServerURL))
+	}
 	// start server
 	log.StdLog.Printf("Serving triki via www: http://%s\n", server.Addr)
 	log.Flush()
@@ -60,4 +65,5 @@ func main() {
 	log.Flush()
 	server.Wait()
 	log.StdLog.Println("All connections terminated.")
+	log.Flush()
 }

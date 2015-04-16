@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"log"
 	"net"
+	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -33,6 +34,10 @@ var (
 var (
 	// directory with static files to serve
 	optServRoot string
+	// url to the server with static content (supersedes optServRoot)
+	optServStaticServ string
+	// url to the server with static resources (parsed optServStaticServ)
+	staticServerURL *url.URL
 )
 
 // mongo config
@@ -56,11 +61,13 @@ func init() {
 
 	// triki config
 	config.DurationVar(&token.MaxExpireAfter, "triki.tkn_max_expire_after",
-		7*24*time.Hour, "maximum time a user authorization token is valid")
+		7*24*time.Hour, "maximum time a user authorization token is valid, change requres to rebuild indexes in the MongoDB")
 
 	// server config
 	config.StringVar(&optServRoot, "server.root",
 		"./www", "directory with static files to serve")
+	config.StringVar(&optServStaticServ, "server.static_server",
+		"", "redirect requests for static contenct to this `server address` (e.g., http://localhost:8080/), supersedes server.root")
 	config.StringVar(&server.Addr, "server.addr",
 		"localhost:8765", "address and port to serve on")
 	config.DurationVar(&auth.RequestTimeout, "server.request_timeout",
@@ -68,7 +75,7 @@ func init() {
 
 	// mongo config
 	config.IntVar(&mongo.MaxLogSize, "mongo.max_log_size",
-		1e10, "maximum size (in bytes) of the log database")
+		1e10, "maximum size (in bytes) of the log database, change requres to rebuild indexes in the MongoDB")
 	config.StringVar(&optMongoAddrs, "mongo.Addrs",
 		"localhost:27017", "MongoDB server to connect to, format: host1[:port1][,host2[:port2],...]")
 	config.BoolVar(&optMongoSSL, "mongo.SSL",
@@ -94,20 +101,22 @@ func init() {
 			logger.Fatalf("Error reading config file `%s`:\n%v", optConfFile, err)
 		}
 	}
-	// write out option values?
-	if optShowConf {
-		config.PrintCurrentValues()
-		os.Exit(0)
-	}
 	////////////////////////////////////////////////////////////////////////////
 	// general config
 	if optNumCpus == 0 {
 		optNumCpus = runtime.NumCPU()
 	}
 	runtime.GOMAXPROCS(optNumCpus)
+
 	//server config
-	mongo.DialInfo.Addrs = strings.Split(optMongoAddrs, ",")
+	if url, err := url.Parse(optServStaticServ); err == nil {
+		staticServerURL = url
+	} else {
+		logger.Fatalf("Error parsing url `%s`:\n%v", optServStaticServ, err)
+	}
+
 	// mongo config
+	mongo.DialInfo.Addrs = strings.Split(optMongoAddrs, ",")
 	if optMongoSSL {
 		mongo.DialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 			conn, err := tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: optMongoSSLInsecure})
@@ -121,5 +130,12 @@ func init() {
 
 	if mongo.DialInfo.Timeout < 0 {
 		logger.Fatalln("MongoDB dial timeout `mongo.DialTimeout` must be nonnegative.")
+	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// write out option values?
+	if optShowConf {
+		config.PrintCurrentValues()
+		os.Exit(0)
 	}
 }
