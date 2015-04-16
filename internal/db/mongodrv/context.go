@@ -20,6 +20,7 @@ const (
 	numOfSessKeys
 )
 
+// TODO check
 func CloseSessions(req *http.Request) {
 	for i := sessionKey(0); i < numOfSessKeys; i++ {
 		val, ok := gcontext.GetOk(req, i)

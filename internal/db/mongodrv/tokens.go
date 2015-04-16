@@ -1,19 +1,11 @@
 package mongo
 
 import (
-	"time"
-
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/token"
-)
-
-const (
-	//tokensExpireAfter time.Duration = time.Duration(time.Second * 60 * 60 * 24 * 7) // 1 week
-	// tokensExpireAfter controls how long authentication tokens are valid.
-	tokensExpireAfter time.Duration = time.Duration(time.Second * 60 * 60) // 1h
 )
 
 // tokensC returns the tokens collection.
@@ -26,12 +18,13 @@ func tokensC(cx context.Context) (*mgo.Collection, *log.Error) {
 }
 
 // TokenFind finds given token in the DB.
-func TokenFind(cx context.Context, tknID []byte) (*token.T, *log.Error) {
+func TokenFind(cx context.Context, tknID bson.ObjectId) (*token.T, *log.Error) {
 	var tkn token.T
 	col, er := tokensC(cx)
 	if er != nil {
 		return nil, er
 	}
+
 	err := col.Find(bson.M{"_id": tknID}).One(&tkn)
 	if err != nil {
 		return nil, log.InternalServerErr(err)
@@ -40,12 +33,12 @@ func TokenFind(cx context.Context, tknID []byte) (*token.T, *log.Error) {
 }
 
 // TokenExists checks if a token exists in the DB.
-func TokenExists(cx context.Context, token []byte) (bool, *log.Error) {
+func TokenExists(cx context.Context, tknID bson.ObjectId) (bool, *log.Error) {
 	col, er := tokensC(cx)
 	if er != nil {
 		return false, er
 	}
-	n, err := col.FindId(token).Count()
+	n, err := col.FindId(tknID).Count()
 	if err != nil {
 		return false, log.InternalServerErr(err)
 	}

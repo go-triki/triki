@@ -18,8 +18,8 @@ func Authenticate(cx context.Context, login, pass string) (*user.T, *token.T, *l
 	if !usr.IsActive() {
 		return nil, nil, log.UserNotActiveErr
 	}
-	// TODO check recent failed logins
-	if err := bcrypt.CompareHashAndPassword(usr.PassHash, append([]byte(user.PassSalt+pass), usr.Salt...)); err != nil {
+	// TODO check recent failed logins, move it to user package?
+	if err := bcrypt.CompareHashAndPassword(usr.PassHash, []byte(pass)); err != nil {
 		// TODO no more than 3 failed logins in 10 minutes? (use req to get info)
 		// add failed login
 		return nil, nil, log.IncorrectPassErr

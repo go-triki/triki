@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	// stderr is a buffered std err for log package output.
 	stderr = bufio.NewWriter(os.Stderr)
 	// StdLog is a log.Logger that is going to be used by this package.
 	StdLog = log.New(stderr, "triki:", log.LstdFlags)

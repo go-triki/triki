@@ -22,6 +22,7 @@ const (
 	userNotActiveTC        trikiCode = 150
 	badSignupDetailsTC     trikiCode = 200
 	badTokenTC             trikiCode = 250
+	badTokenFormatTC       trikiCode = 250
 	dbNotFoundTC           trikiCode = 300
 	internalServerErrTC    trikiCode = 400
 	failedWritingReplyTC   trikiCode = 420
@@ -102,6 +103,9 @@ var (
 	// BadTokenErr is returned when the token supplied by the user
 	// is expired/invalid/not in the DB.
 	BadTokenErr = &Error{What: "bad authorization token", TrikiCode: badTokenTC}
+	// BadTokenFormatErr is returned when the token supplied by the user doesn't
+	// conform to the requred format.
+	BadTokenFormatErr = &Error{What: "bad format of authorization token", TrikiCode: badTokenFormatTC}
 	// UserNotActiveErr indicates that user account is not in the "active" state
 	// and the user cannot log in.
 	UserNotActiveErr = &Error{What: "this user account is not active", TrikiCode: userNotActiveTC}

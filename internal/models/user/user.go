@@ -10,8 +10,6 @@ import (
 )
 
 var (
-	// PassSalt is used to salt all user passwords.
-	PassSalt string
 	// MinPassLen is the minimal password length that is accepted.
 	MinPassLen int
 )
@@ -43,7 +41,6 @@ type T struct {
 	Usr      string        `json:"usr"            bson:"usr"`    // login/email (unique)
 	Pass     string        `json:"pass,omitempty" bson:"-"`      // password (from www)
 	PassHash []byte        `json:"-"              bson:"pass"`   // password hash (from DB)
-	Salt     []byte        `json:"-"              bson:"salt"`   // individual password salt (from DB)
 	Nick     string        `json:"nick"           bson:"nick "`  // user's nick
 	Status   StatusT       `json:"-"              bson:"status"` // user's status (active, deleted, etc.)
 	// TODO add list of failed logins

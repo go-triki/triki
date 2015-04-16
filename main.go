@@ -49,11 +49,15 @@ func main() {
 
 	// start server
 	log.StdLog.Printf("Serving triki via www: http://%s\n", server.Addr)
+	log.Flush()
 	server.Handler = &log.LoggedMux{r}
+	server.ErrorLog = log.StdLog
 	if err := server.ListenAndServe(); err != nil {
 		log.StdLog.Println(err)
 		return
 	}
-	log.StdLog.Println("Exiting gracefully, please wait...")
+	log.StdLog.Println("Exiting gracefully, please wait for active connections...")
+	log.Flush()
 	server.Wait()
+	log.StdLog.Println("All connections terminated.")
 }

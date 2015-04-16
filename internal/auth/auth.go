@@ -29,7 +29,7 @@ var (
 	DBCloseSessions func(*http.Request)
 )
 
-// set by wwwapi
+// set by www
 var (
 	// WriteErrorHandler writes given error to the http respose and saves it in
 	// the logs via context.

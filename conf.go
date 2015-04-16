@@ -20,7 +20,6 @@ import (
 	"gopkg.in/triki.v0/internal/db/mongodrv"
 	tlog "gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/token"
-	"gopkg.in/triki.v0/internal/models/user"
 )
 
 // general config
@@ -52,8 +51,6 @@ func init() {
 	config.BoolVar(&optShowConf, "show_config", false, "print currently loaded configuration and exit")
 	config.StringVar(&optConfFile, "config", "", "`path` to a TOML configuration file")
 
-	config.StringVar(&user.PassSalt, "pass_salt",
-		"", "used to `salt` passwords in the DB")
 	config.IntVar(&optNumCpus, "num_cpus",
 		0, "number of CPUs to use, 0 to autodetect")
 
@@ -104,9 +101,6 @@ func init() {
 	}
 	////////////////////////////////////////////////////////////////////////////
 	// general config
-	if user.PassSalt == "" {
-		logger.Fatalln("Error: `pass_salt` option can't be empty. Best practice is to set it to some random string.")
-	}
 	if optNumCpus == 0 {
 		optNumCpus = runtime.NumCPU()
 	}

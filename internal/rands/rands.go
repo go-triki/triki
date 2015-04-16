@@ -12,7 +12,8 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-const randChars = "`1234567890-=qwertyuiop[]asdfghjkl;'\\<zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:\"|>ZXCVBNM<>?"
+// characters to choose from (randomly), don't include ":" (colon)
+const randChars = "`1234567890-=qwertyuiop[]asdfghjkl;'\\<zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL\"|>ZXCVBNM<>?"
 
 // New returns new random slice.
 func New(n int) []byte {

@@ -29,7 +29,7 @@ var (
 	session, adminSession, logSession *mgo.Session
 )
 
-// Setup database connections, etc.
+// Setup database connections, etc. Run by main program.
 func Setup() {
 	mgo.SetLogger(tlog.StdLog)
 	var err error
@@ -57,7 +57,7 @@ func Setup() {
 	tokensSetup()
 }
 
-// Cleanup database connections, etc.
+// Cleanup database connections, etc. Run by main program.
 func Cleanup() {
 	log.Println("Closing database connections...")
 	adminSession.Close()
