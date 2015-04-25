@@ -1,4 +1,4 @@
-# sourced by `mongo_setup.sh`
+# sourced by `mongo_setup.sh` & co.
 
 ADMIN_USR="admin"
 ADMIN_PASS="admin"
