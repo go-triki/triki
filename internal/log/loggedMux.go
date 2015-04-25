@@ -17,6 +17,8 @@ type LoggedMux struct {
 
 func (mux *LoggedMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	// defence against clickjacking
+	w.Header().Set("X-Frame-Options", "DENY")
 	defer func() {
 		elaps := time.Since(start)
 		err := context.Get(r, errKey)
@@ -29,9 +31,9 @@ func (mux *LoggedMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"error":  err,
 		})
 		// std log
-		str := fmt.Sprintf("%s %s | start: %v elapsed: %v")
+		str := fmt.Sprintf("%s %s | start: %v elapsed: %v", r.Method, r.URL.Path, start, elaps)
 		if dbErr != nil {
-			str = fmt.Sprintf("%s | error logging to DB: %v", str, err)
+			str = fmt.Sprintf("%s | error logging to DB: %v", str, dbErr)
 		}
 		if err != nil {
 			str = fmt.Sprintf("%s | error: %v", str, err)
