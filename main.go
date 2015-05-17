@@ -55,7 +55,7 @@ func main() {
 	// start server
 	log.StdLog.Printf("Serving triki via www: http://%s\n", server.Addr)
 	log.Flush()
-	server.Handler = &log.LoggedMux{r}
+	server.Handler = &log.LoggedMux{Router: r}
 	server.ErrorLog = log.StdLog
 	if err := server.ListenAndServe(); err != nil {
 		log.StdLog.Println(err)

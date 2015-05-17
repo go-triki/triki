@@ -77,7 +77,6 @@ func Find(cx context.Context, tknID bson.ObjectId) (*T, *log.Error) {
 		} else { // error checking if token exists
 			return nil, err // return original error
 		}
-		return nil, err
 	}
 	if time.Now().After(tkn.Birth.Add(tkn.ExpireAfter)) {
 		// token expired

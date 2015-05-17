@@ -7,6 +7,8 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/url"
@@ -45,12 +47,13 @@ var (
 	optMongoAddrs       string
 	optMongoSSL         bool
 	optMongoSSLInsecure bool
+	optMongoCAFile      string
+	optMongoCertFile    string
+	optMongoKeyFile     string
 )
 
 // init parses command line flags and config files.
 func init() {
-	// get logger without  buffering (internal/log switches default log logger)
-	logger := log.New(os.Stderr, "triki:", log.LstdFlags)
 	//config.CommandLine = &config.Set{flag.CommandLine}
 	// general config
 	config.BoolVar(&optShowConf, "show_config", false, "print currently loaded configuration and exit")
@@ -82,6 +85,12 @@ func init() {
 		true, "use SSL for connections with MongoDB server")
 	config.BoolVar(&optMongoSSLInsecure, "mongo.SSLInsecure",
 		false, "don't verify MongoDB server's certificates, suspectible to man-in-the-middle attack, insecure!")
+	config.StringVar(&optMongoCAFile, "mongo.SSL_CA_file",
+		"", "`path` to file with CA SSL certificates, e.g., './CA.pem'")
+	config.StringVar(&optMongoCertFile, "mongo.SSL_cert_file",
+		"", "`path` to file with SSL certificate")
+	config.StringVar(&optMongoKeyFile, "mongo.SSL_key_file",
+		"", "`path` to file with SSL key")
 	config.BoolVar(&mongo.DialInfo.Direct, "mongo.Direct",
 		false, "direct connection with MongoDB (don't connect with the whole cluster)")
 	config.DurationVar(&mongo.DialInfo.Timeout, "mongo.DialTimeout",
@@ -98,7 +107,7 @@ func init() {
 	// parse config file
 	if optConfFile != "" {
 		if err := config.Parse(optConfFile); err != nil {
-			logger.Fatalf("Error reading config file `%s`:\n%v", optConfFile, err)
+			log.Fatalf("Error reading config file `%s`:\n%v\n", optConfFile, err)
 		}
 	}
 	////////////////////////////////////////////////////////////////////////////
@@ -112,14 +121,44 @@ func init() {
 	if url, err := url.Parse(optServStaticServ); err == nil {
 		staticServerURL = url
 	} else {
-		logger.Fatalf("Error parsing url `%s`:\n%v", optServStaticServ, err)
+		log.Fatalf("Error parsing url `%s`:\n%v\n", optServStaticServ, err)
 	}
 
 	// mongo config
 	mongo.DialInfo.Addrs = strings.Split(optMongoAddrs, ",")
 	if optMongoSSL {
+		// CA pool
+		var CAPool *x509.CertPool
+		if optMongoCAFile != "" {
+			CAPool = x509.NewCertPool()
+			cert, err := ioutil.ReadFile(optMongoCAFile)
+			if err != nil {
+				log.Fatalf("Error reading Mongo certificate `%s`: %v\n", optMongoCAFile, err)
+			}
+			if !CAPool.AppendCertsFromPEM(cert) {
+				log.Fatalf("Error adding Mongo certificate `%s`.\n", optMongoCAFile)
+			}
+		}
+		// certificate
+		var cert tls.Certificate
+		loadCert := optMongoCertFile != "" || optMongoKeyFile != ""
+		if loadCert {
+			var err error
+			cert, err = tls.LoadX509KeyPair(optMongoCertFile, optMongoKeyFile)
+			if err != nil {
+				log.Fatalf("Error loading certificate pair `%s`, `%s`: %v\n", optMongoCertFile, optMongoKeyFile, err)
+			}
+		}
+		// TLS dial
 		mongo.DialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-			conn, err := tls.Dial("tcp", addr.String(), &tls.Config{InsecureSkipVerify: optMongoSSLInsecure})
+			config := tls.Config{
+				InsecureSkipVerify: optMongoSSLInsecure,
+				RootCAs:            CAPool,
+			}
+			if loadCert {
+				config.Certificates = []tls.Certificate{cert}
+			}
+			conn, err := tls.Dial("tcp", addr.String(), &config)
 			if err != nil {
 				tlog.StdLog.Printf("MongoDB TLS connection error: %s.\n", err.Error())
 				tlog.Flush()
@@ -129,13 +168,14 @@ func init() {
 	}
 
 	if mongo.DialInfo.Timeout < 0 {
-		logger.Fatalln("MongoDB dial timeout `mongo.DialTimeout` must be nonnegative.")
+		log.Fatalln("MongoDB dial timeout `mongo.DialTimeout` must be nonnegative.")
 	}
 
 	////////////////////////////////////////////////////////////////////////////
 	// write out option values?
 	if optShowConf {
 		config.PrintCurrentValues()
+		tlog.Flush()
 		os.Exit(0)
 	}
 }

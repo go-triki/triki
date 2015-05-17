@@ -5,6 +5,7 @@ package mongo // import "gopkg.in/triki.v0/internal/db/mongodrv"
 
 import (
 	"log"
+	"os"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/triki.v0/internal/auth"
@@ -31,11 +32,14 @@ var (
 
 // Setup database connections, etc. Run by main program.
 func Setup() {
-	mgo.SetLogger(tlog.StdLog)
+	//mgo.SetLogger(tlog.StdLog)
+	mgo.SetLogger(tlog.StdLogUnbuffered)
 	var err error
 	session, err = mgo.DialWithInfo(&DialInfo)
 	if err != nil {
-		log.Fatalf("Error connecting to MongoDB: %s.\n", err)
+		log.Printf("Error connecting to MongoDB: %s.\n", err)
+		tlog.Flush()
+		os.Exit(1)
 	}
 
 	session.SetMode(mgo.Monotonic, true)

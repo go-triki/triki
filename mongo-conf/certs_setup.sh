@@ -6,7 +6,7 @@ fqdn="localhost"
 rm -i -R RootCA SigningCA1 SigningCA2
 rm -i *.pem *.crt *.key *.csr
 
-echo For easy testing and compatability with other scripts set all passwords to \"pass\".
+echo For easy testing and compatibility with other scripts set all passwords to \"pass\".
 echo ---------------------------------------------------------------------------
 echo Create the self signed root certificate
 echo
