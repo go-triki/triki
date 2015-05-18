@@ -23,13 +23,13 @@ import (
 	"gopkg.in/triki.v0/internal/db/mongodrv"
 	tlog "gopkg.in/triki.v0/internal/log"
 	"gopkg.in/triki.v0/internal/models/token"
+	"gopkg.in/triki.v0/internal/tls_pass"
 )
 
 // general config
 var (
 	optShowConf bool
 	optConfFile string
-	optNumCpus  int
 )
 
 // server config
@@ -44,12 +44,14 @@ var (
 
 // mongo config
 var (
+	optNumCpus          int
 	optMongoAddrs       string
 	optMongoSSL         bool
 	optMongoSSLInsecure bool
 	optMongoCAFile      string
 	optMongoCertFile    string
 	optMongoKeyFile     string
+	optMongoSSLPass     string
 )
 
 // init parses command line flags and config files.
@@ -59,10 +61,9 @@ func init() {
 	config.BoolVar(&optShowConf, "show_config", false, "print currently loaded configuration and exit")
 	config.StringVar(&optConfFile, "config", "", "`path` to a TOML configuration file")
 
-	config.IntVar(&optNumCpus, "num_cpus",
-		0, "number of CPUs to use, 0 to autodetect")
-
 	// triki config
+	config.IntVar(&optNumCpus, "triki.num_cpus",
+		0, "number of CPUs to use, 0 to autodetect")
 	config.DurationVar(&token.MaxExpireAfter, "triki.tkn_max_expire_after",
 		7*24*time.Hour, "maximum time a user authorization token is valid, change requres to rebuild indexes in the MongoDB")
 
@@ -79,11 +80,11 @@ func init() {
 	// mongo config
 	config.IntVar(&mongo.MaxLogSize, "mongo.max_log_size",
 		1e10, "maximum size (in bytes) of the log database, change requres to rebuild indexes in the MongoDB")
-	config.StringVar(&optMongoAddrs, "mongo.Addrs",
+	config.StringVar(&optMongoAddrs, "mongo.address",
 		"localhost:27017", "MongoDB server to connect to, format: host1[:port1][,host2[:port2],...]")
 	config.BoolVar(&optMongoSSL, "mongo.SSL",
 		true, "use SSL for connections with MongoDB server")
-	config.BoolVar(&optMongoSSLInsecure, "mongo.SSLInsecure",
+	config.BoolVar(&optMongoSSLInsecure, "mongo.SSL_insecure",
 		false, "don't verify MongoDB server's certificates, suspectible to man-in-the-middle attack, insecure!")
 	config.StringVar(&optMongoCAFile, "mongo.SSL_CA_file",
 		"", "`path` to file with CA SSL certificates, e.g., './CA.pem'")
@@ -91,15 +92,17 @@ func init() {
 		"", "`path` to file with SSL certificate")
 	config.StringVar(&optMongoKeyFile, "mongo.SSL_key_file",
 		"", "`path` to file with SSL key")
-	config.BoolVar(&mongo.DialInfo.Direct, "mongo.Direct",
+	config.StringVar(&optMongoSSLPass, "mongo.SSL_password",
+		"", "`password` for the encrypted SSL key")
+	config.BoolVar(&mongo.DialInfo.Direct, "mongo.direct",
 		false, "direct connection with MongoDB (don't connect with the whole cluster)")
-	config.DurationVar(&mongo.DialInfo.Timeout, "mongo.DialTimeout",
+	config.DurationVar(&mongo.DialInfo.Timeout, "mongo.dial_timeout",
 		5*time.Second, "timeout for connecting to MongoDB instance (must be >=0)")
-	config.StringVar(&mongo.DialInfo.Database, "mongo.Database",
+	config.StringVar(&mongo.DialInfo.Database, "mongo.database",
 		"triki", "MongoDB database with triki data")
-	config.StringVar(&mongo.DialInfo.Username, "mongo.Usr",
+	config.StringVar(&mongo.DialInfo.Username, "mongo.user",
 		"triki", "username for authentication to MongoDB")
-	config.StringVar(&mongo.DialInfo.Password, "mongo.Pass",
+	config.StringVar(&mongo.DialInfo.Password, "mongo.password",
 		"triki", "password for authentication to MongoDB")
 	////////////////////////////////////////////////////////////////////////////
 	// parse flags
@@ -128,23 +131,25 @@ func init() {
 	mongo.DialInfo.Addrs = strings.Split(optMongoAddrs, ",")
 	if optMongoSSL {
 		// CA pool
+		// TODO
 		var CAPool *x509.CertPool
 		if optMongoCAFile != "" {
 			CAPool = x509.NewCertPool()
 			cert, err := ioutil.ReadFile(optMongoCAFile)
 			if err != nil {
-				log.Fatalf("Error reading Mongo certificate `%s`: %v\n", optMongoCAFile, err)
+				log.Fatalf("Error reading Mongo CA certificate `%s`: %v\n", optMongoCAFile, err)
 			}
 			if !CAPool.AppendCertsFromPEM(cert) {
-				log.Fatalf("Error adding Mongo certificate `%s`.\n", optMongoCAFile)
+				log.Fatalf("Error adding Mongo CA certificate `%s`.\n", optMongoCAFile)
 			}
 		}
 		// certificate
+		// TODO
 		var cert tls.Certificate
 		loadCert := optMongoCertFile != "" || optMongoKeyFile != ""
 		if loadCert {
 			var err error
-			cert, err = tls.LoadX509KeyPair(optMongoCertFile, optMongoKeyFile)
+			cert, err = tls_pass.LoadX509KeyPair(optMongoCertFile, optMongoKeyFile, []byte(optMongoSSLPass))
 			if err != nil {
 				log.Fatalf("Error loading certificate pair `%s`, `%s`: %v\n", optMongoCertFile, optMongoKeyFile, err)
 			}
