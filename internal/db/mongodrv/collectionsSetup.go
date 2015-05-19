@@ -16,7 +16,16 @@ func logSetup() {
 		MaxBytes: MaxLogSize,
 	})
 	if err != nil {
-		log.Fatalf("MongoDB create collection `%s` failed: %s", logCName, err.Error())
+		//log.Fatalf("MongoDB create collection `%s` failed: %s", logCName, err.Error())
+		if err, ok := err.(*mgo.QueryError); ok {
+			if err.Code == 48 {
+				log.Printf("MongoDB create collection `%s`: %v, ignoring MaxLogSize.", logCName, err)
+			} else {
+				log.Fatalf("MongoDB create collection `%s` failed: %#v", logCName, err)
+			}
+		} else {
+			log.Fatalf("MongoDB create collection `%s` failed: %#v", logCName, err)
+		}
 	}
 	//	index := mgo.Index{
 	//		Key:        []string{"time"},

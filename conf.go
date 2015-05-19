@@ -79,7 +79,7 @@ func init() {
 
 	// mongo config
 	config.IntVar(&mongo.MaxLogSize, "mongo.max_log_size",
-		1e10, "maximum size (in bytes) of the log database, change requres to rebuild indexes in the MongoDB")
+		1e8, "maximum size (in bytes) of the log database, change requres to rebuild indexes in the MongoDB")
 	config.StringVar(&optMongoAddrs, "mongo.address",
 		"localhost:27017", "MongoDB server to connect to, format: host1[:port1][,host2[:port2],...]")
 	config.BoolVar(&optMongoSSL, "mongo.SSL",
@@ -89,9 +89,9 @@ func init() {
 	config.StringVar(&optMongoCAFile, "mongo.SSL_CA_file",
 		"", "`path` to file with CA SSL certificates, e.g., './CA.pem'")
 	config.StringVar(&optMongoCertFile, "mongo.SSL_cert_file",
-		"", "`path` to file with SSL certificate")
+		"", "`path` to file with SSL certificate, e.g., './triki.crt'")
 	config.StringVar(&optMongoKeyFile, "mongo.SSL_key_file",
-		"", "`path` to file with SSL key")
+		"", "`path` to file with SSL key, e.g., './triki.key'")
 	config.StringVar(&optMongoSSLPass, "mongo.SSL_password",
 		"", "`password` for the encrypted SSL key")
 	config.BoolVar(&mongo.DialInfo.Direct, "mongo.direct",

@@ -12,9 +12,11 @@ import (
 var (
 	// stderr is a buffered std err for log package output.
 	stderr = bufio.NewWriter(os.Stderr)
-	// StdLog is a log.Logger that is going to be used by this package.
-	StdLog           = log.New(stderr, "triki:", log.LstdFlags)
-	StdLogUnbuffered = log.New(os.Stderr, "triki:", log.LstdFlags)
+	// StdLog is triki www unbuffered log.Logger.
+	//StdLog = log.New(stderr, "triki:", log.LstdFlags) // TODO(km): buffer it?
+	StdLog = log.New(os.Stderr, "triki-www:", log.LstdFlags)
+	// StdLogMongo is an unbuffered log.Logger used to log mongo-related info.
+	StdLogMongo = log.New(os.Stderr, "triki-mongo:", log.LstdFlags)
 	// DBLog is a function used by this package to write logs to a database.
 	DBLog func(map[string]interface{}) error
 )

@@ -4,6 +4,7 @@ Gotriki server of the Trikipedia - the truth encyclopedia.
 package main // import "gopkg.in/triki.v0"
 
 import (
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -12,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/kornel661/nserv.v0"
 	"gopkg.in/triki.v0/internal/db/mongodrv"
-	"gopkg.in/triki.v0/internal/log"
+	tlog "gopkg.in/triki.v0/internal/log"
 )
 
 var (
@@ -21,7 +22,7 @@ var (
 
 func main() {
 	// flush logger
-	defer log.Flush()
+	defer tlog.Flush()
 
 	// catch signals & shutdown the server
 	signals := make(chan os.Signal, 1)
@@ -29,7 +30,7 @@ func main() {
 	// redirect "stop" signals to server.Stop
 	go func() {
 		<-signals
-		log.StdLog.Println("Caught signal. Exiting (waiting for open connections to termiate).")
+		log.Println("Caught signal. Exiting (waiting for open connections to termiate).")
 		server.Stop()
 	}()
 
@@ -38,7 +39,7 @@ func main() {
 	defer mongo.Cleanup()
 
 	r := mux.NewRouter()
-	// log.LoggedMux clears contexts for us
+	// tlog.LoggedMux clears contexts for us
 	r.KeepContext = true
 
 	// setup API routing
@@ -53,17 +54,14 @@ func main() {
 		r.PathPrefix("/").Handler(httputil.NewSingleHostReverseProxy(staticServerURL))
 	}
 	// start server
-	log.StdLog.Printf("Serving triki via www: http://%s\n", server.Addr)
-	log.Flush()
-	server.Handler = &log.LoggedMux{Router: r}
-	server.ErrorLog = log.StdLog
+	log.Printf("Serving triki via www: http://%s\n", server.Addr)
+	server.Handler = &tlog.LoggedMux{Router: r}
+	server.ErrorLog = tlog.StdLog
 	if err := server.ListenAndServe(); err != nil {
-		log.StdLog.Println(err)
+		log.Println(err)
 		return
 	}
-	log.StdLog.Println("Exiting gracefully, please wait for active connections...")
-	log.Flush()
+	log.Println("Exiting gracefully, please wait for active connections...")
 	server.Wait()
-	log.StdLog.Println("All connections terminated.")
-	log.Flush()
+	log.Println("All connections terminated.")
 }

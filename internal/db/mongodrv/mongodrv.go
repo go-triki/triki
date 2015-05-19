@@ -32,8 +32,9 @@ var (
 
 // Setup database connections, etc. Run by main program.
 func Setup() {
-	//mgo.SetLogger(tlog.StdLog)
-	mgo.SetLogger(tlog.StdLogUnbuffered)
+	mgo.SetLogger(tlog.StdLogMongo)
+	mgo.SetDebug(false)
+	mgo.SetStats(false)
 	var err error
 	session, err = mgo.DialWithInfo(&DialInfo)
 	if err != nil {
